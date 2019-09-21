@@ -45,7 +45,7 @@ class Being {
                 break
             }
             else  {
-               // print("found NON-BLACK pixel at x:\(xpos) y:\(ypos) pointer:\(pointer[0]) \(pointer[1]) \(pointer[2])")
+                print("found NON-BLACK pixel at x:\(xpos) y:\(ypos) pointer:\(pointer[0]) \(pointer[1]) \(pointer[2])")
             }
         }
         
@@ -53,9 +53,15 @@ class Being {
     }
     
     func infect(x: Int32, y: Int32) {
-        if(xpos == x && ypos == y) {
+        // if x and y are plus or minus 1 pixel, infect
+        if (xpos == x || xpos - 1 == x || xpos + 1 == x) &&
+            (ypos == y || ypos - 1 == y || ypos + 1 == y) {
             type = 1
         }
+        
+//        if(xpos == x && ypos == y) {
+//            type = 1
+//        }
     }
     
     func infect() {
@@ -89,7 +95,7 @@ class Being {
             
             // setPixel(x: xpos, y: ypos, type: NSColor(red: 0, green: 0, blue: 0, alpha: 1))
             
-            if (look(x: xpos, y: ypos, d: dir, dist: 1) == 0) {
+            if (look(x: xpos, y: ypos, d: dir, dist: 2) == 0) {
                 if (dir == 1) { ypos = ypos - 1 }
                 if (dir == 2) { xpos = xpos + 1 }
                 if (dir == 3) { ypos = ypos + 1 }
@@ -111,7 +117,7 @@ class Being {
             
             if (active == 0 && target != 1) { dir = Int32((arc4random() % 4) + 1) }
             
-            let victim = look(x: xpos, y: ypos, d: dir, dist: 1)
+            let victim = look(x: xpos, y: ypos, d: dir, dist: 4)
             
             if (victim == 2 || victim == 4) {
                 var ix = xpos
@@ -146,6 +152,7 @@ class Being {
         var tempX = x
         var tempY = y
         let pointer = UnsafeMutablePointer<Int>.allocate(capacity: 4)
+        defer { pointer.deallocate() }
         
         for _ in 0..<dist {
             if (d == 1) { tempY = tempY - 1 }
@@ -154,18 +161,19 @@ class Being {
             if (d == 4) { tempX = tempX - 1 }
             
             ZombieSaverView.view?.pixelOfPoint(p: pointer, xpos: Int(tempX*2), ypos: Int(tempY*2))
-            if pointer[0] != 0 {
-                print("Candidate at x:\(xpos) y:\(ypos) pointer:\(pointer[0]) \(pointer[1]) \(pointer[2])")
-            }
+//            if pointer[0] != 0 {
+//                print("Candidate at x:\(xpos) y:\(ypos) pointer:\(pointer[0]) \(pointer[1]) \(pointer[2])")
+//            }
             
             if (tempX > Int32(ZombieSaverView.view!.frame.size.width - 1) || tempX < 1 || tempY > Int32(ZombieSaverView.view!.frame.size.height - 1) || tempY < 1) { return 3 }
             else if (pointer[0] == 67) { return 3 } // ZombieSaverView.wall
-            else if (pointer[0] == 19) { return 4 } // panic human
-            else if (pointer[0] == 19) { return 2 }      // human
-            else if (pointer[0] == 19) { return 1 }     // zombie
+            else if (pointer[0] == 107) { return 4 } // panic human
+            else if (pointer[0] == 34) {    // human - TODO: putting a check for 35 here allows infection but causes everyone to move to the bottom ???
+                return 2
+            }
+            else if (pointer[0] == 253) { return 1 }     // zombie
+
         }
-        
-        pointer.deallocate()
         
         return 0
     }

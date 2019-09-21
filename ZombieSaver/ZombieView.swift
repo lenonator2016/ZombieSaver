@@ -11,13 +11,14 @@ import ScreenSaver
 class ZombieSaverView: ScreenSaverView {
     
     var beingsPositioned = false
+    var allowAnimation = false
     var freeze = 0
     let numBigRects = 100
     let numSmallRects = 30
-    static var num = 1000
+    static var num = 5000
     static var speed = 1
     static var panic = 5
-    static var wall = NSColor.darkGray
+    static var wall = NSColor(deviceRed: 85.0/255.0, green: 85.0/255.0, blue: 85.0/255.0, alpha: 1.0)  // NSColor.darkGray
     static var beings:[Being] = []
     var bigRects:[NSRect] = []
     var smallRects:[NSRect] = []
@@ -61,6 +62,8 @@ class ZombieSaverView: ScreenSaverView {
         }
         
         ZombieSaverView.beings[0].infect()
+        ZombieSaverView.beings[1].infect()
+        ZombieSaverView.beings[2].infect()
     }
     
     @available(*, unavailable)
@@ -95,7 +98,7 @@ class ZombieSaverView: ScreenSaverView {
         }
         
         // Update the "state" of the screensaver in this function
-        if (freeze == 0)
+        if (freeze == 0 && allowAnimation)
         {
             for i in 0..<ZombieSaverView.num {
                 ZombieSaverView.beings[i].move()
@@ -104,6 +107,10 @@ class ZombieSaverView: ScreenSaverView {
             if (ZombieSaverView.speed == 2) { sleep(20/1000) }
             else if (ZombieSaverView.speed == 3) { sleep(50/1000) }
             else if (ZombieSaverView.speed == 4) { sleep(100/1000) }
+        }
+        
+        if beingsPositioned == true {
+            allowAnimation = true
         }
         
         setNeedsDisplay(self.bounds)

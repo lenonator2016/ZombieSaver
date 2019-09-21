@@ -12,26 +12,29 @@ class ZombieSaverView: ScreenSaverView {
     
     var beingsPositioned = false
     var freeze = 0
-    static var num = 100
+    let numBigRects = 100
+    let numSmallRects = 30
+    static var num = 1000
     static var speed = 1
     static var panic = 5
-    static var wall = NSColor.init(red: 50, green: 50, blue: 50, alpha: 1.0)
-    static var beings = Array(repeating: Being(), count: ZombieSaverView.num)
+    static var wall = NSColor.darkGray
+    static var beings:[Being] = []
     var bigRects:[NSRect] = []
     var smallRects:[NSRect] = []
     
-//    static var width = UInt32(NSScreen.main?.visibleFrame.size.width ?? 0)
-//    static var height = UInt32(NSScreen.main?.visibleFrame.size.height ?? 0)
+    var bitmapImageRep:NSBitmapImageRep?
     static var view:ZombieSaverView?
     
     // MARK: - Initialization
     override init?(frame: NSRect, isPreview: Bool) {
         super.init(frame: frame, isPreview: isPreview)
+        
         ZombieSaverView.view = self
+        bitmapImageRep = bitmapImageRepForCachingDisplay(in: self.visibleRect)
         var maxWidth = CGFloat(frame.size.width) * 0.24
         var maxHeight = CGFloat(frame.size.height) * 0.24
         
-        for i in 0..<100 {
+        for _ in 0..<numBigRects {
             let origin = CGPoint(x: SSRandomFloatBetween(0.0, CGFloat(frame.size.width - 1)) + 1.0,
                                  y: SSRandomFloatBetween(0.0, CGFloat(frame.size.height - 1)) + 1.0)
             
@@ -44,13 +47,17 @@ class ZombieSaverView: ScreenSaverView {
         maxWidth = CGFloat(frame.size.width) * 0.08
         maxHeight = CGFloat(frame.size.height) * 0.08
         
-        for i in 0..<30 {
+        for _ in 0..<numSmallRects {
             let origin = CGPoint(x: SSRandomFloatBetween(0.0, CGFloat(frame.size.width - 1)) + 1.0,
                                  y: SSRandomFloatBetween(0.0, CGFloat(frame.size.height - 1)) + 1.0)
             
             let size = NSSize(width: SSRandomFloatBetween(0.0, maxWidth) + CGFloat(frame.size.width) * 0.08, height: SSRandomFloatBetween(0.0, maxHeight) + CGFloat(frame.size.height) * 0.08)
             
             smallRects.append(NSRect(origin: origin, size: size))
+        }
+        
+        for i in 0..<ZombieSaverView.num {
+            ZombieSaverView.beings.append(Being.init(elementID: i))
         }
         
         ZombieSaverView.beings[0].infect()
@@ -63,16 +70,22 @@ class ZombieSaverView: ScreenSaverView {
     
     // MARK: - Lifecycle
     override func draw(_ rect: NSRect) {
+        
         // Draw a single frame in this function
         drawBackground()
         
-        for i in 0..<ZombieSaverView.num {
-            ZombieSaverView.beings[i].draw()
+        if beingsPositioned {
+            for i in 0..<ZombieSaverView.num {
+                ZombieSaverView.beings[i].draw()
+            }
         }
     }
     
     override func animateOneFrame() {
         super.animateOneFrame()
+        
+        // get the current state of the world
+        self.cacheDisplay(in: self.visibleRect, to: bitmapImageRep!)
         
         if beingsPositioned == false {
             for i in 0..<ZombieSaverView.num {
@@ -82,34 +95,53 @@ class ZombieSaverView: ScreenSaverView {
         }
         
         // Update the "state" of the screensaver in this function
-//        if (freeze == 0)
-//        {
-//            for i in 0..<ZombieSaverView.num {
-//                ZombieSaverView.beings[i].move()
-//            }
-//            
-//            if (ZombieSaverView.speed == 2) { sleep(20) }
-//            else if (ZombieSaverView.speed == 3) { sleep(50) }
-//            else if (ZombieSaverView.speed == 4) { sleep(100) }
-//        }
+        if (freeze == 0)
+        {
+            for i in 0..<ZombieSaverView.num {
+                ZombieSaverView.beings[i].move()
+            }
+            
+            if (ZombieSaverView.speed == 2) { sleep(20/1000) }
+            else if (ZombieSaverView.speed == 3) { sleep(50/1000) }
+            else if (ZombieSaverView.speed == 4) { sleep(100/1000) }
+        }
+        
+        setNeedsDisplay(self.bounds)
     }
     
     func drawBackground() {
         
         // Do nothing but draw. Do not calculate anything requiring getPixel
         NSColor.black.setFill()
-        self.frame.fill()
+        self.visibleRect.fill()
         
-        for i in 0..<100 {
-            NSColor.darkGray.setFill()
+        // TESTING ON
+        // Draw one big inset rect
+//        let rect = NSRect(x: 100, y: 100, width: 200, height: 100) //self.visibleRect.insetBy(dx: 50, dy: 50)
+//        ZombieSaverView.wall.setFill()
+//        rect.fill()
+        
+        // TESTING OFF
+        
+        
+        for i in 0..<numBigRects {
+            ZombieSaverView.wall.setFill()
             bigRects[i].fill()
             NSColor.black.setStroke()
             let bp = NSBezierPath.init(rect: bigRects[i])
             bp.lineWidth = 2.0
             bp.stroke()
         }
-        
+
         NSColor.black.setFill()
         smallRects.fill()
+    }
+    
+    func colorOfPoint(xpos: Int, ypos: Int) -> NSColor? {
+        return bitmapImageRep?.colorAt(x: xpos, y: ypos)
+    }
+    
+    func pixelOfPoint(p: UnsafeMutablePointer<Int>, xpos: Int, ypos: Int) {
+        bitmapImageRep?.getPixel(p, atX: xpos, y: Int(self.visibleRect.size.height * 2) - ypos)
     }
 }

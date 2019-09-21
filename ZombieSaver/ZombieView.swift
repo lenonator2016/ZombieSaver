@@ -62,8 +62,6 @@ class ZombieSaverView: ScreenSaverView {
         }
         
         ZombieSaverView.beings[0].infect()
-        ZombieSaverView.beings[1].infect()
-        ZombieSaverView.beings[2].infect()
     }
     
     @available(*, unavailable)
@@ -122,15 +120,6 @@ class ZombieSaverView: ScreenSaverView {
         NSColor.black.setFill()
         self.visibleRect.fill()
         
-        // TESTING ON
-        // Draw one big inset rect
-//        let rect = NSRect(x: 100, y: 100, width: 200, height: 100) //self.visibleRect.insetBy(dx: 50, dy: 50)
-//        ZombieSaverView.wall.setFill()
-//        rect.fill()
-        
-        // TESTING OFF
-        
-        
         for i in 0..<numBigRects {
             ZombieSaverView.wall.setFill()
             bigRects[i].fill()
@@ -148,6 +137,8 @@ class ZombieSaverView: ScreenSaverView {
         return bitmapImageRep?.colorAt(x: xpos, y: ypos)
     }
     
+    // Note - this function is correct. We pass in X and Y coordinates already multiplied by two to account for the
+    // retina scale of the bitmap
     func pixelOfPoint(p: UnsafeMutablePointer<Int>, xpos: Int, ypos: Int) {
         bitmapImageRep?.getPixel(p, atX: xpos, y: Int(self.visibleRect.size.height * 2) - ypos)
     }

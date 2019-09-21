@@ -6,8 +6,9 @@
 //  Copyright © 2019 Lenco Software, LLC. All rights reserved.
 //
 
-import Foundation
-import AppKit
+//import Foundation
+import ScreenSaver
+//import AppKit
 
 class Being {
     
@@ -23,7 +24,7 @@ class Being {
     let panicHuman = NSColor.purple
     
     init(elementID: Int) {
-        dir = Int32(CGFloat((arc4random() % 4) + 1))
+        dir = SSRandomIntBetween(0, 1) + 1
         myID = elementID
     }
     
@@ -89,15 +90,15 @@ class Being {
         
         if( (type == 2 && (active > 0 || r > ZombieSaverView.panic) ) || r == 1) {
             
-            // setPixel(x: xpos, y: ypos, type: NSColor(red: 0, green: 0, blue: 0, alpha: 1))
-            
+            // if black space is ahead of us, keep walking
             if (look(x: xpos, y: ypos, d: dir, dist: 2) == 0) {
-                if (dir == 1) { ypos = ypos - 1 }
+                if (dir == 1) { ypos = ypos - 1 }  // down
                 if (dir == 2) { xpos = xpos + 1 }
-                if (dir == 3) { ypos = ypos + 1 }
+                if (dir == 3) { ypos = ypos + 1 } // up
                 if (dir == 4) { xpos = xpos - 1 }
             }
             else {
+                // we've hit a wall or human or zombie, change direction
                 dir = Int32((arc4random() % 4) + 1)
             }
             
@@ -106,7 +107,7 @@ class Being {
             }
         }
         
-        let target = look(x: xpos, y: ypos, d: dir, dist: 10)
+        let target = look(x: xpos, y: ypos, d: dir, dist: 20)
         
         if (type == 1) {
             if (target == 2 || target == 4) { active = 10 }
@@ -130,15 +131,18 @@ class Being {
         }
         if (type == 2)
         {
+            // if we see a zombie or panicked human, we get more active
             if (target == 1 || target == 4){ active = 10 }
             
+            // run away from zombie?
             if (target == 1) {
                 dir = dir + 2
                 if (dir > 4) { dir = dir - 4 }
             }
             
-            if arc4random() % 8 == 1 {
-                dir = Int32((arc4random() % 4) + 1)
+            // random chance to keep walking toward zombie
+            if SSRandomIntBetween(0, 8) == 1 {
+                dir = SSRandomIntBetween(1, 4)
             }
         }
     }
@@ -164,8 +168,19 @@ class Being {
             if (tempX > Int32(ZombieSaverView.view!.frame.size.width - 1) || tempX < 1 || tempY > Int32(ZombieSaverView.view!.frame.size.height - 1) || tempY < 1) { return 3 }
             else if (pointer[0] == 67) { return 3 } // ZombieSaverView.wall
             else if (pointer[0] == 107) { return 4 } // panic human
-            else if (pointer[0] == 34) {    // human
-                return 2
+            else if (pointer[0] == 34 || pointer[0] == 35) {    // human
+                // if I'm moving up, the next pixel will be my color, so check the next pixel after THAT
+                if dir == 3 && tempY - 1 == y {
+                    tempY = tempY + 1
+                    ZombieSaverView.view?.pixelOfPoint(p: pointer, xpos: Int(tempX*2), ypos: Int(tempY*2))
+                    if (tempX > Int32(ZombieSaverView.view!.frame.size.width - 1) || tempX < 1 || tempY > Int32(ZombieSaverView.view!.frame.size.height - 1) || tempY < 1) { return 3 }
+                    else if (pointer[0] == 67) { return 3 } // ZombieSaverView.wall
+                    else if (pointer[0] == 107) { return 4 } // panic human
+                    else if (pointer[0] == 34 || pointer[0] == 35) { return 2 }
+                }
+                else {
+                    return 2
+                }
             }
             else if (pointer[0] == 253) { return 1 }     // zombie
 

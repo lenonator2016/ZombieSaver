@@ -73,10 +73,6 @@ class Being {
     }
     
     func draw() {
-        //let r = Int32(arc4random() % 10)
-        
-        // if( (type == 2 && (active > 0 || r > ZombieSaverView.panic) ) || r == 1) {
-        
         if (type == 1) {
             setPixel(x: xpos, y: ypos, type: zombie)
         }
@@ -117,7 +113,7 @@ class Being {
             
             if (active == 0 && target != 1) { dir = Int32((arc4random() % 4) + 1) }
             
-            let victim = look(x: xpos, y: ypos, d: dir, dist: 4)
+            let victim = look(x: xpos, y: ypos, d: dir, dist: 2)
             
             if (victim == 2 || victim == 4) {
                 var ix = xpos
@@ -168,7 +164,7 @@ class Being {
             if (tempX > Int32(ZombieSaverView.view!.frame.size.width - 1) || tempX < 1 || tempY > Int32(ZombieSaverView.view!.frame.size.height - 1) || tempY < 1) { return 3 }
             else if (pointer[0] == 67) { return 3 } // ZombieSaverView.wall
             else if (pointer[0] == 107) { return 4 } // panic human
-            else if (pointer[0] == 34) {    // human - TODO: putting a check for 35 here allows infection but causes everyone to move to the bottom ???
+            else if (pointer[0] == 34) {    // human
                 return 2
             }
             else if (pointer[0] == 253) { return 1 }     // zombie

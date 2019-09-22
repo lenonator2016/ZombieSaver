@@ -10,27 +10,24 @@ import ScreenSaver
 
 class ZombieSaverView: ScreenSaverView {
     
-    var beingsPositioned = false
-    var allowAnimation = false
-    var freeze = 0
-    let numBigRects = 200
-    let numSmallRects = 60
     static var numBeings = 5000
     static var speed = 1
     static var panic = 5
     static var wall = NSColor(deviceRed: 85.0/255.0, green: 85.0/255.0, blue: 85.0/255.0, alpha: 1.0)  // NSColor.darkGray
     static var beings:[Being] = []
-    static var humanCount = 5000
-    static var zombieCount = 0
+    static var view:ZombieSaverView?
+    
+    var beingsPositioned = false
+    var freeze = 0
+    let numBigRects = 150
+    let numSmallRects = 30
+    
     var bigRects:[NSRect] = []
     var smallRects:[NSRect] = []
     var humanLabel:NSTextField!
     var zombieLabel:NSTextField!
-    var showLabels = true
-    
+    var showLabels = false
     var bitmapImageRep:NSBitmapImageRep?
-    static var view:ZombieSaverView?
-    
     override var acceptsFirstResponder: Bool { return true }
     
     // MARK: - Initialization
@@ -38,8 +35,29 @@ class ZombieSaverView: ScreenSaverView {
         super.init(frame: frame, isPreview: isPreview)
         self.becomeFirstResponder()
         
+        if isPreview {
+            ZombieSaverView.numBeings = 1000
+        }
+        
         ZombieSaverView.view = self
         bitmapImageRep = bitmapImageRepForCachingDisplay(in: self.visibleRect)
+        
+        createBuildings()
+        createLabels()
+        createBeings()
+        updateLabels()
+    }
+    
+    @available(*, unavailable)
+    required init?(coder decoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    deinit {
+        self.resignFirstResponder()
+    }
+    
+    private func createBuildings() {
         var maxWidth = CGFloat(frame.size.width) * 0.24
         var maxHeight = CGFloat(frame.size.height) * 0.24
         
@@ -64,11 +82,9 @@ class ZombieSaverView: ScreenSaverView {
             
             smallRects.append(NSRect(origin: origin, size: size))
         }
-        
-        for i in 0..<ZombieSaverView.numBeings {
-            ZombieSaverView.beings.append(Being.init(elementID: i))
-        }
-        
+    }
+    
+    private func createLabels() {
         // Add labels for Zombies and Humans
         humanLabel = NSTextField(labelWithString: "")
         humanLabel.isBezeled = false
@@ -91,19 +107,14 @@ class ZombieSaverView: ScreenSaverView {
         zombieLabel.alignment = .center
         zombieLabel.frame = NSRect(x: (frame.size.width / 2.0) + 50, y: 0, width: 200, height: 50)
         self.addSubview(zombieLabel)
-        
-        updateLabels()
+    }
+    
+    private func createBeings() {
+        for i in 0..<ZombieSaverView.numBeings {
+            ZombieSaverView.beings.append(Being.init(elementID: i))
+        }
         
         ZombieSaverView.beings[0].infect()
-    }
-    
-    @available(*, unavailable)
-    required init?(coder decoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    deinit {
-        self.resignFirstResponder()
     }
     
     // MARK: - Event Handling
@@ -116,7 +127,7 @@ class ZombieSaverView: ScreenSaverView {
             showLabels = !showLabels
             updateLabels()
             
-        case 49:
+        case 49:    // space
             for i in 0..<ZombieSaverView.numBeings {
                 ZombieSaverView.beings[i].uninfect()
                 }
@@ -183,7 +194,7 @@ class ZombieSaverView: ScreenSaverView {
         }
         
         // Update the "state" of the screensaver in this function
-        if (freeze == 0 && allowAnimation)
+        if (freeze == 0)
         {
             for i in 0..<ZombieSaverView.numBeings {
                 ZombieSaverView.beings[i].move()
@@ -192,10 +203,6 @@ class ZombieSaverView: ScreenSaverView {
             if (ZombieSaverView.speed == 2) { sleep(20/1000) }
             else if (ZombieSaverView.speed == 3) { sleep(50/1000) }
             else if (ZombieSaverView.speed == 4) { sleep(100/1000) }
-        }
-        
-        if beingsPositioned == true {
-            allowAnimation = true
         }
         
         setNeedsDisplay(self.bounds)
@@ -222,8 +229,20 @@ class ZombieSaverView: ScreenSaverView {
     
     func updateLabels() {
         
-        humanLabel.stringValue = "Humans: \(ZombieSaverView.humanCount)"
-        zombieLabel.stringValue = "Zombies: \(ZombieSaverView.zombieCount)"
+        var humanCount = 0
+        var zombieCount = 0
+        
+        for i in 0..<ZombieSaverView.numBeings {
+            if ZombieSaverView.beings[i].type == 1 {
+                zombieCount = zombieCount + 1
+            }
+            else {
+                humanCount = humanCount + 1
+            }
+        }
+        
+        humanLabel.stringValue = "Humans: \(humanCount)"
+        zombieLabel.stringValue = "Zombies: \(zombieCount)"
         
         if showLabels {
             NSAnimationContext.runAnimationGroup { (_) in

@@ -56,8 +56,6 @@ class Being {
             
             if type != 1 {
                 type = 1
-                ZombieSaverView.humanCount = ZombieSaverView.humanCount - 1
-                ZombieSaverView.zombieCount = ZombieSaverView.zombieCount + 1
                 ZombieSaverView.view?.updateLabels()
 //                let sound = NSSound(contentsOfFile: Bundle.main.path(forSoundResource: "infected") ?? "", byReference: false)
 //                sound?.play()
@@ -67,15 +65,11 @@ class Being {
     
     func infect() {
         type = 1
-        ZombieSaverView.humanCount = ZombieSaverView.humanCount - 1
-        ZombieSaverView.zombieCount = ZombieSaverView.zombieCount + 1
         ZombieSaverView.view?.updateLabels()
     }
     
     func uninfect() {
         type = 2
-        ZombieSaverView.humanCount = ZombieSaverView.humanCount + 1
-        ZombieSaverView.zombieCount = ZombieSaverView.zombieCount - 1
         ZombieSaverView.view?.updateLabels()
     }
     

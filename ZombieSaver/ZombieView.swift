@@ -8,6 +8,13 @@
 
 import ScreenSaver
 
+struct Pixel {
+    var r:UInt8 = 0
+    var g:UInt8 = 0
+    var b:UInt8 = 0
+    var a:UInt8 = 0
+}
+
 class ZombieSaverView: ScreenSaverView {
     
     static var numBeings = 5000
@@ -19,6 +26,7 @@ class ZombieSaverView: ScreenSaverView {
     
     var beingsPositioned = false
     var freeze = 0
+    var circleZombies = false
     let numBigRects = 150
     let numSmallRects = 30
     
@@ -91,8 +99,8 @@ class ZombieSaverView: ScreenSaverView {
         humanLabel.drawsBackground = false
         humanLabel.isEditable = false
         humanLabel.isSelectable = false
-        humanLabel.textColor = NSColor.green
-        humanLabel.alphaValue = 0.75
+        humanLabel.textColor = NSColor(red: 0.0, green: 240.0/255.0, blue: 0.0, alpha: 1.0)
+        humanLabel.alphaValue = 0.0
         humanLabel.alignment = .center
         humanLabel.frame = NSRect(x: (frame.size.width / 2.0) - 250, y: 0, width: 200, height: 50)
         self.addSubview(humanLabel)
@@ -102,14 +110,17 @@ class ZombieSaverView: ScreenSaverView {
         zombieLabel.drawsBackground = false
         zombieLabel.isEditable = false
         zombieLabel.isSelectable = false
-        zombieLabel.textColor = NSColor.red
-        zombieLabel.alphaValue = 0.75
+        zombieLabel.textColor = NSColor(red: 240.0/255.0, green: 0.0, blue: 0.0, alpha: 1.0)
+        zombieLabel.alphaValue = 0.0
         zombieLabel.alignment = .center
         zombieLabel.frame = NSRect(x: (frame.size.width / 2.0) + 50, y: 0, width: 200, height: 50)
         self.addSubview(zombieLabel)
     }
     
     private func createBeings() {
+        ZombieSaverView.beings.removeAll()
+        beingsPositioned = false
+        
         for i in 0..<ZombieSaverView.numBeings {
             ZombieSaverView.beings.append(Being.init(elementID: i))
         }
@@ -123,7 +134,7 @@ class ZombieSaverView: ScreenSaverView {
         let keyCode = event.keyCode
         
         switch keyCode {
-        case 37:
+        case 37:        // l
             showLabels = !showLabels
             updateLabels()
             
@@ -149,7 +160,8 @@ class ZombieSaverView: ScreenSaverView {
         case 69:        // +
             if ZombieSaverView.numBeings < 5000 {
                 ZombieSaverView.numBeings = ZombieSaverView.numBeings + 100
-                freeze = 1
+                createBeings()
+                updateLabels()
             }
             
         case 27 :    // -
@@ -157,10 +169,20 @@ class ZombieSaverView: ScreenSaverView {
         case 78:    // -
             if ZombieSaverView.numBeings > 100 {
                 ZombieSaverView.numBeings = ZombieSaverView.numBeings - 100
-                freeze = 1
+                createBeings()
+                updateLabels()
             }
         case 6:     // z
             freeze = 1
+            
+        case 8:     // c
+            // set a flag to draw circle around each zombie
+            circleZombies = true
+            
+            // turn off after five seconds
+            Timer.scheduledTimer(withTimeInterval: 5.0, repeats: false) { (_) in
+                self.circleZombies = false
+            }
         
         default:
                 super.keyDown(with: event)
@@ -176,6 +198,16 @@ class ZombieSaverView: ScreenSaverView {
         if beingsPositioned {
             for i in 0..<ZombieSaverView.numBeings {
                 ZombieSaverView.beings[i].draw()
+                
+                if circleZombies && ZombieSaverView.beings[i].type == 1 {
+                    let origin = CGPoint(x: Int(ZombieSaverView.beings[i].xpos), y: Int(ZombieSaverView.beings[i].ypos))
+                    var rect = NSRect(x: origin.x, y: origin.y, width: 1, height: 1)
+                    rect = rect.insetBy(dx: -3, dy: -3)
+                    let path = NSBezierPath(ovalIn: rect)
+                    path.lineWidth = 1
+                    NSColor.white.setStroke()
+                    path.stroke()
+                }
             }
         }
     }
@@ -247,7 +279,7 @@ class ZombieSaverView: ScreenSaverView {
         if showLabels {
             NSAnimationContext.runAnimationGroup { (_) in
                 NSAnimationContext.current.duration = 1.0
-                humanLabel.animator().alphaValue = 0.75
+                humanLabel.animator().alphaValue = 1.0
                 zombieLabel.animator().alphaValue = 0.75
             }
         }
@@ -262,7 +294,14 @@ class ZombieSaverView: ScreenSaverView {
     
     // Note - this function is correct. We pass in X and Y coordinates already multiplied by two to account for the
     // retina scale of the bitmap
-    func pixelOfPoint(p: UnsafeMutablePointer<Int>, xpos: Int, ypos: Int) {
+    func pixelOfPoint( p: UnsafeMutablePointer<Int>, xpos: Int, ypos: Int) {
         bitmapImageRep?.getPixel(p, atX: xpos, y: Int(self.visibleRect.size.height * 2) - ypos)
     }
+    
+//    func rawPixelOfPoint(xpos: Int, ypos: Int) -> Pixel {
+//        let bitmapData = bitmapImageRep?.bitmapData
+//        let index = xpos + (Int(self.visibleRect.size.height * 2) - ypos) * Int(self.visibleRect.size.width)
+//
+//        return Pixel(r: bitmapData![index], g: bitmapData![index+1], b: bitmapData![index + 2], a: bitmapData![index+3])
+//    }
 }

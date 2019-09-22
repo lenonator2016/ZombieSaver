@@ -13,22 +13,30 @@ class ZombieSaverView: ScreenSaverView {
     var beingsPositioned = false
     var allowAnimation = false
     var freeze = 0
-    let numBigRects = 100
-    let numSmallRects = 30
-    static var num = 5000
+    let numBigRects = 200
+    let numSmallRects = 60
+    static var numBeings = 5000
     static var speed = 1
     static var panic = 5
     static var wall = NSColor(deviceRed: 85.0/255.0, green: 85.0/255.0, blue: 85.0/255.0, alpha: 1.0)  // NSColor.darkGray
     static var beings:[Being] = []
+    static var humanCount = 5000
+    static var zombieCount = 0
     var bigRects:[NSRect] = []
     var smallRects:[NSRect] = []
+    var humanLabel:NSTextField!
+    var zombieLabel:NSTextField!
+    var showLabels = true
     
     var bitmapImageRep:NSBitmapImageRep?
     static var view:ZombieSaverView?
     
+    override var acceptsFirstResponder: Bool { return true }
+    
     // MARK: - Initialization
     override init?(frame: NSRect, isPreview: Bool) {
         super.init(frame: frame, isPreview: isPreview)
+        self.becomeFirstResponder()
         
         ZombieSaverView.view = self
         bitmapImageRep = bitmapImageRepForCachingDisplay(in: self.visibleRect)
@@ -57,9 +65,34 @@ class ZombieSaverView: ScreenSaverView {
             smallRects.append(NSRect(origin: origin, size: size))
         }
         
-        for i in 0..<ZombieSaverView.num {
+        for i in 0..<ZombieSaverView.numBeings {
             ZombieSaverView.beings.append(Being.init(elementID: i))
         }
+        
+        // Add labels for Zombies and Humans
+        humanLabel = NSTextField(labelWithString: "")
+        humanLabel.isBezeled = false
+        humanLabel.drawsBackground = false
+        humanLabel.isEditable = false
+        humanLabel.isSelectable = false
+        humanLabel.textColor = NSColor.green
+        humanLabel.alphaValue = 0.75
+        humanLabel.alignment = .center
+        humanLabel.frame = NSRect(x: (frame.size.width / 2.0) - 250, y: 0, width: 200, height: 50)
+        self.addSubview(humanLabel)
+        
+        zombieLabel = NSTextField(labelWithString: "")
+        zombieLabel.isBezeled = false
+        zombieLabel.drawsBackground = false
+        zombieLabel.isEditable = false
+        zombieLabel.isSelectable = false
+        zombieLabel.textColor = NSColor.red
+        zombieLabel.alphaValue = 0.75
+        zombieLabel.alignment = .center
+        zombieLabel.frame = NSRect(x: (frame.size.width / 2.0) + 50, y: 0, width: 200, height: 50)
+        self.addSubview(zombieLabel)
+        
+        updateLabels()
         
         ZombieSaverView.beings[0].infect()
     }
@@ -69,6 +102,60 @@ class ZombieSaverView: ScreenSaverView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    deinit {
+        self.resignFirstResponder()
+    }
+    
+    // MARK: - Event Handling
+    override func keyDown(with event: NSEvent) {
+        // extract the key
+        let keyCode = event.keyCode
+        
+        switch keyCode {
+        case 37:
+            showLabels = !showLabels
+            updateLabels()
+            
+        case 49:
+            for i in 0..<ZombieSaverView.numBeings {
+                ZombieSaverView.beings[i].uninfect()
+                }
+            let index = Int(SSRandomIntBetween(0, Int32(ZombieSaverView.numBeings - 1)))
+            ZombieSaverView.beings[index].infect()
+            
+        case 1:     // s
+                ZombieSaverView.speed = ZombieSaverView.speed + 1
+                if ZombieSaverView.speed > 4 { ZombieSaverView.speed = 1 }
+            
+        case 35:    // p
+            ZombieSaverView.panic = 5 - ZombieSaverView.panic
+            
+        case 5:     // g
+            break
+            
+        case 24:        // +
+            fallthrough
+        case 69:        // +
+            if ZombieSaverView.numBeings < 5000 {
+                ZombieSaverView.numBeings = ZombieSaverView.numBeings + 100
+                freeze = 1
+            }
+            
+        case 27 :    // -
+            fallthrough
+        case 78:    // -
+            if ZombieSaverView.numBeings > 100 {
+                ZombieSaverView.numBeings = ZombieSaverView.numBeings - 100
+                freeze = 1
+            }
+        case 6:     // z
+            freeze = 1
+        
+        default:
+                super.keyDown(with: event)
+        }
+    }
+    
     // MARK: - Lifecycle
     override func draw(_ rect: NSRect) {
         
@@ -76,7 +163,7 @@ class ZombieSaverView: ScreenSaverView {
         drawBackground()
         
         if beingsPositioned {
-            for i in 0..<ZombieSaverView.num {
+            for i in 0..<ZombieSaverView.numBeings {
                 ZombieSaverView.beings[i].draw()
             }
         }
@@ -89,7 +176,7 @@ class ZombieSaverView: ScreenSaverView {
         self.cacheDisplay(in: self.visibleRect, to: bitmapImageRep!)
         
         if beingsPositioned == false {
-            for i in 0..<ZombieSaverView.num {
+            for i in 0..<ZombieSaverView.numBeings {
                 ZombieSaverView.beings[i].position()
             }
             beingsPositioned = true
@@ -98,7 +185,7 @@ class ZombieSaverView: ScreenSaverView {
         // Update the "state" of the screensaver in this function
         if (freeze == 0 && allowAnimation)
         {
-            for i in 0..<ZombieSaverView.num {
+            for i in 0..<ZombieSaverView.numBeings {
                 ZombieSaverView.beings[i].move()
             }
             
@@ -133,8 +220,25 @@ class ZombieSaverView: ScreenSaverView {
         smallRects.fill()
     }
     
-    func colorOfPoint(xpos: Int, ypos: Int) -> NSColor? {
-        return bitmapImageRep?.colorAt(x: xpos, y: ypos)
+    func updateLabels() {
+        
+        humanLabel.stringValue = "Humans: \(ZombieSaverView.humanCount)"
+        zombieLabel.stringValue = "Zombies: \(ZombieSaverView.zombieCount)"
+        
+        if showLabels {
+            NSAnimationContext.runAnimationGroup { (_) in
+                NSAnimationContext.current.duration = 1.0
+                humanLabel.animator().alphaValue = 0.75
+                zombieLabel.animator().alphaValue = 0.75
+            }
+        }
+        else {
+            NSAnimationContext.runAnimationGroup { (_) in
+                NSAnimationContext.current.duration = 1.0
+                humanLabel.animator().alphaValue = 0.0
+                zombieLabel.animator().alphaValue = 0.0
+            }
+        }
     }
     
     // Note - this function is correct. We pass in X and Y coordinates already multiplied by two to account for the

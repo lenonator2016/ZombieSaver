@@ -21,7 +21,7 @@ class Being {
     
     let zombie = NSColor.red
     let human = NSColor.green
-    let panicHuman = NSColor.purple
+    let panicHuman = NSColor.yellow
     
     init(elementID: Int) {
         dir = SSRandomIntBetween(0, 1) + 1
@@ -34,7 +34,7 @@ class Being {
         
         let pointer = UnsafeMutablePointer<Int>.allocate(capacity: 4)
         
-        for i in 0..<1000 {
+        for _ in 0..<1000 {
             
             xpos = Int32(CGFloat(arc4random() % UInt32(rect.size.width - 1)) + 1)
             ypos = Int32(CGFloat(arc4random() % UInt32(rect.size.height - 1)) + 1)// possibly do height - 1 and then add 1 to result, see java code
@@ -42,11 +42,7 @@ class Being {
             ZombieSaverView.view?.pixelOfPoint(p: pointer, xpos: Int(xpos*2), ypos: Int(ypos*2))
             
             if (pointer[0] == 0 && pointer[1] == 0 && pointer[2] == 0) {
-               // print("found BLACK for element \(myID) at x:\(xpos) y:\(ypos) pointer:\(pointer[0]) \(pointer[1]) \(pointer[2])")
                 break
-            }
-            else  {
-                print("found NON-BLACK pixel at x:\(xpos) y:\(ypos) pointer:\(pointer[0]) \(pointer[1]) \(pointer[2])")
             }
         }
         
@@ -57,20 +53,30 @@ class Being {
         // if x and y are plus or minus 1 pixel, infect
         if (xpos == x || xpos - 1 == x || xpos + 1 == x) &&
             (ypos == y || ypos - 1 == y || ypos + 1 == y) {
-            type = 1
+            
+            if type != 1 {
+                type = 1
+                ZombieSaverView.humanCount = ZombieSaverView.humanCount - 1
+                ZombieSaverView.zombieCount = ZombieSaverView.zombieCount + 1
+                ZombieSaverView.view?.updateLabels()
+//                let sound = NSSound(contentsOfFile: Bundle.main.path(forSoundResource: "infected") ?? "", byReference: false)
+//                sound?.play()
+            }
         }
-        
-//        if(xpos == x && ypos == y) {
-//            type = 1
-//        }
     }
     
     func infect() {
         type = 1
+        ZombieSaverView.humanCount = ZombieSaverView.humanCount - 1
+        ZombieSaverView.zombieCount = ZombieSaverView.zombieCount + 1
+        ZombieSaverView.view?.updateLabels()
     }
     
     func uninfect() {
         type = 2
+        ZombieSaverView.humanCount = ZombieSaverView.humanCount + 1
+        ZombieSaverView.zombieCount = ZombieSaverView.zombieCount - 1
+        ZombieSaverView.view?.updateLabels()
     }
     
     func draw() {
@@ -124,7 +130,7 @@ class Being {
                 if (dir == 3) { iy = iy + 1 }
                 if (dir == 4) { ix = ix - 1 }
                 
-                for i in 0..<ZombieSaverView.num {
+                for i in 0..<ZombieSaverView.numBeings {
                     ZombieSaverView.beings[i].infect(x: ix, y: iy)
                 }
             }
@@ -161,9 +167,6 @@ class Being {
             if (d == 4) { tempX = tempX - 1 }
             
             ZombieSaverView.view?.pixelOfPoint(p: pointer, xpos: Int(tempX*2), ypos: Int(tempY*2))
-//            if pointer[0] != 0 {
-//                print("Candidate at x:\(xpos) y:\(ypos) pointer:\(pointer[0]) \(pointer[1]) \(pointer[2])")
-//            }
             
             if (tempX > Int32(ZombieSaverView.view!.frame.size.width - 1) || tempX < 1 || tempY > Int32(ZombieSaverView.view!.frame.size.height - 1) || tempY < 1) { return 3 }
             else if (pointer[0] == 67) { return 3 } // ZombieSaverView.wall
@@ -183,7 +186,6 @@ class Being {
                 }
             }
             else if (pointer[0] == 253) { return 1 }     // zombie
-
         }
         
         return 0

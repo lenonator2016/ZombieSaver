@@ -7,12 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1EAF69D223373185001B9502 /* Resources in Resources */ = {isa = PBXBuildFile; fileRef = 1EAF69D123373185001B9502 /* Resources */; };
 		1ECC5FAF2334563B0001A684 /* ZombieView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ECC5FAE2334563B0001A684 /* ZombieView.swift */; };
 		1ECC5FB1233457F30001A684 /* Being.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ECC5FB0233457F30001A684 /* Being.swift */; };
 		1ECC5FB323345A290001A684 /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ECC5FB223345A290001A684 /* Utilities.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1EAF69D123373185001B9502 /* Resources */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Resources; path = ZombieSaver/Resources; sourceTree = "<group>"; };
 		1ECC5FA12334554C0001A684 /* ZombieSaver.saver */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ZombieSaver.saver; sourceTree = BUILT_PRODUCTS_DIR; };
 		1ECC5FA82334554C0001A684 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1ECC5FAE2334563B0001A684 /* ZombieView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZombieView.swift; sourceTree = "<group>"; };
@@ -36,6 +38,7 @@
 			isa = PBXGroup;
 			children = (
 				1ECC5FA32334554C0001A684 /* ZombieSaver */,
+				1EAF69D123373185001B9502 /* Resources */,
 				1ECC5FA22334554C0001A684 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -128,6 +131,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1EAF69D223373185001B9502 /* Resources in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

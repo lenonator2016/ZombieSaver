@@ -33,6 +33,7 @@ class ZombieSaverView: ScreenSaverView {
     var bigRects:[NSRect] = []
     var smallRects:[NSRect] = []
     var humanLabel:NSTextField!
+    var panickedLabel:NSTextField!
     var zombieLabel:NSTextField!
     var showLabels = false
     var bitmapImageRep:NSBitmapImageRep?
@@ -70,10 +71,11 @@ class ZombieSaverView: ScreenSaverView {
         var maxHeight = CGFloat(frame.size.height) * 0.24
         
         for _ in 0..<numBigRects {
-            let origin = CGPoint(x: SSRandomFloatBetween(0.0, CGFloat(frame.size.width - 1)) + 1.0,
-                                 y: SSRandomFloatBetween(0.0, CGFloat(frame.size.height - 1)) + 1.0)
+            let origin = CGPoint(x: SSRandomFloatBetween(0.0, CGFloat(frame.size.width - 1)).rounded() + 1.0,
+                                 y: SSRandomFloatBetween(0.0, CGFloat(frame.size.height - 1)).rounded() + 1.0)
             
-            let size = NSSize(width: SSRandomFloatBetween(0.0, maxWidth) + CGFloat(frame.size.width) * 0.04, height: SSRandomFloatBetween(0.0, maxHeight) + CGFloat(frame.size.height) * 0.04)
+            let size = NSSize(width: (SSRandomFloatBetween(0.0, maxWidth) + CGFloat(frame.size.width) * 0.04).rounded(),
+                              height: (SSRandomFloatBetween(0.0, maxHeight) + CGFloat(frame.size.height) * 0.04).rounded())
             
             bigRects.append(NSRect(origin: origin, size: size))
         }
@@ -83,10 +85,11 @@ class ZombieSaverView: ScreenSaverView {
         maxHeight = CGFloat(frame.size.height) * 0.08
         
         for _ in 0..<numSmallRects {
-            let origin = CGPoint(x: SSRandomFloatBetween(0.0, CGFloat(frame.size.width - 1)) + 1.0,
-                                 y: SSRandomFloatBetween(0.0, CGFloat(frame.size.height - 1)) + 1.0)
+            let origin = CGPoint(x: SSRandomFloatBetween(0.0, CGFloat(frame.size.width - 1)).rounded() + 1.0,
+                                 y: SSRandomFloatBetween(0.0, CGFloat(frame.size.height - 1)).rounded() + 1.0)
             
-            let size = NSSize(width: SSRandomFloatBetween(0.0, maxWidth) + CGFloat(frame.size.width) * 0.08, height: SSRandomFloatBetween(0.0, maxHeight) + CGFloat(frame.size.height) * 0.08)
+            let size = NSSize(width: (SSRandomFloatBetween(0.0, maxWidth) + CGFloat(frame.size.width) * 0.08).rounded(),
+                              height: (SSRandomFloatBetween(0.0, maxHeight) + CGFloat(frame.size.height) * 0.08).rounded())
             
             smallRects.append(NSRect(origin: origin, size: size))
         }
@@ -102,8 +105,19 @@ class ZombieSaverView: ScreenSaverView {
         humanLabel.textColor = NSColor(red: 0.0, green: 240.0/255.0, blue: 0.0, alpha: 1.0)
         humanLabel.alphaValue = 0.0
         humanLabel.alignment = .center
-        humanLabel.frame = NSRect(x: (frame.size.width / 2.0) - 250, y: 0, width: 200, height: 50)
+        humanLabel.frame = NSRect(x: (frame.size.width / 2.0) - 300, y: 0, width: 200, height: 50)
         self.addSubview(humanLabel)
+        
+        panickedLabel = NSTextField(labelWithString: "")
+        panickedLabel.isBezeled = false
+        panickedLabel.drawsBackground = false
+        panickedLabel.isEditable = false
+        panickedLabel.isSelectable = false
+        panickedLabel.textColor = NSColor(red: 240.0/255.0, green: 240.0/255.0, blue: 11.0/255.0, alpha: 1.0)
+        panickedLabel.alphaValue = 0.0
+        panickedLabel.alignment = .center
+        panickedLabel.frame = NSRect(x: (frame.size.width / 2.0) - 100, y: 0, width: 200, height: 50)
+        self.addSubview(panickedLabel)
         
         zombieLabel = NSTextField(labelWithString: "")
         zombieLabel.isBezeled = false
@@ -113,7 +127,7 @@ class ZombieSaverView: ScreenSaverView {
         zombieLabel.textColor = NSColor(red: 240.0/255.0, green: 0.0, blue: 0.0, alpha: 1.0)
         zombieLabel.alphaValue = 0.0
         zombieLabel.alignment = .center
-        zombieLabel.frame = NSRect(x: (frame.size.width / 2.0) + 50, y: 0, width: 200, height: 50)
+        zombieLabel.frame = NSRect(x: (frame.size.width / 2.0) + 100, y: 0, width: 200, height: 50)
         self.addSubview(zombieLabel)
     }
     
@@ -193,6 +207,8 @@ class ZombieSaverView: ScreenSaverView {
     override func draw(_ rect: NSRect) {
         
         // Draw a single frame in this function
+        NSGraphicsContext.current?.shouldAntialias = false
+
         drawBackground()
         
         if beingsPositioned {
@@ -263,6 +279,7 @@ class ZombieSaverView: ScreenSaverView {
         
         var humanCount = 0
         var zombieCount = 0
+        var panicCount = 0
         
         for i in 0..<ZombieSaverView.numBeings {
             if ZombieSaverView.beings[i].type == 1 {
@@ -270,23 +287,29 @@ class ZombieSaverView: ScreenSaverView {
             }
             else {
                 humanCount = humanCount + 1
+                if ZombieSaverView.beings[i].active > 0 {
+                    panicCount = panicCount + 1
+                }
             }
         }
         
         humanLabel.stringValue = "Humans: \(humanCount)"
+        panickedLabel.stringValue = "Panicked Humans: \(panicCount)"
         zombieLabel.stringValue = "Zombies: \(zombieCount)"
         
         if showLabels {
             NSAnimationContext.runAnimationGroup { (_) in
                 NSAnimationContext.current.duration = 1.0
                 humanLabel.animator().alphaValue = 1.0
-                zombieLabel.animator().alphaValue = 0.75
+                panickedLabel.animator().alphaValue = 1.0
+                zombieLabel.animator().alphaValue = 1.0
             }
         }
         else {
             NSAnimationContext.runAnimationGroup { (_) in
                 NSAnimationContext.current.duration = 1.0
                 humanLabel.animator().alphaValue = 0.0
+                panickedLabel.animator().alphaValue = 0.0
                 zombieLabel.animator().alphaValue = 0.0
             }
         }
@@ -298,10 +321,7 @@ class ZombieSaverView: ScreenSaverView {
         bitmapImageRep?.getPixel(p, atX: xpos, y: Int(self.visibleRect.size.height * 2) - ypos)
     }
     
-//    func rawPixelOfPoint(xpos: Int, ypos: Int) -> Pixel {
-//        let bitmapData = bitmapImageRep?.bitmapData
-//        let index = xpos + (Int(self.visibleRect.size.height * 2) - ypos) * Int(self.visibleRect.size.width)
-//
-//        return Pixel(r: bitmapData![index], g: bitmapData![index+1], b: bitmapData![index + 2], a: bitmapData![index+3])
-//    }
+    func colorOfPoint(xpos: Int, ypos: Int) -> NSColor? {
+        return bitmapImageRep?.colorAt(x: xpos, y: Int(self.visibleRect.size.height * 2) - ypos)
+    }
 }

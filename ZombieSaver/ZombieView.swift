@@ -43,6 +43,7 @@ class ZombieSaverView: ScreenSaverView {
     override init?(frame: NSRect, isPreview: Bool) {
         super.init(frame: frame, isPreview: isPreview)
         self.becomeFirstResponder()
+        animationTimeInterval = 0.06
         
         if isPreview {
             ZombieSaverView.numBeings = 1000
@@ -167,6 +168,7 @@ class ZombieSaverView: ScreenSaverView {
             ZombieSaverView.panic = 5 - ZombieSaverView.panic
             
         case 5:     // g
+            freeze = 0
             break
             
         case 24:        // +

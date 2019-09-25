@@ -17,7 +17,7 @@ class Being {
     var active = 0
     var myID = 0
     
-    let zombie = NSColor.red
+    let zombie =      NSColor.red
     let human = NSColor.green
     let panicHuman = NSColor.yellow
     
@@ -180,8 +180,13 @@ class Being {
             ZombieSaverView.view?.pixelOfPoint(p: pointer, xpos: Int(tempX*2), ypos: Int(tempY*2))
 
             if (tempX > Int32(ZombieSaverView.view!.frame.size.width - 1) || tempX < 1 || tempY > Int32(ZombieSaverView.view!.frame.size.height - 1) || tempY < 1) { return 3 }
-            else if (pointer[0] == 67) { return 3 } // ZombieSaverView.wall
-            else if (pointer[0] == 255 && pointer[1] == 255) { return 4 } // panic human
+            else if (pointer[0] == 67) {        // ZombieSaverView.wall
+                return 3
+            }
+            else if ((pointer[0] == 254 || pointer[0] == 255) &&
+                (pointer[1] == 254 || pointer[1] == 255)) {     // panic human
+                return 4
+            }
             else if (pointer[0] == 34 || pointer[0] == 35) {    // human
                 // if I'm moving up, the next pixel will be my color, so check the next pixel after THAT
                 if dir == 3 && tempY - 1 == y {
@@ -189,16 +194,16 @@ class Being {
                     ZombieSaverView.view?.pixelOfPoint(p: pointer, xpos: Int(tempX*2), ypos: Int(tempY*2))
                     if (tempX > Int32(ZombieSaverView.view!.frame.size.width - 1) || tempX < 1 || tempY > Int32(ZombieSaverView.view!.frame.size.height - 1) || tempY < 1) { return 3 }
                     else if (pointer[0] == 67) { return 3 } // ZombieSaverView.wall
-                    else if (pointer[0] == 255 && pointer[1] == 255) { return 4 } // panic human
+                    else if ((pointer[0] == 254 || pointer[0] == 255) &&
+                        (pointer[1] == 254 || pointer[1] == 255)) { return 4 } // panic human
                     else if (pointer[0] == 34 || pointer[0] == 35) { return 2 }
-                    //else if (pointer[0] == 251 || pointer[0] == 253) { return 1 }     // zombie
                 }
                 else {
                     // we are not moving up, we encountered a human so return that
                     return 2
                 }
             }
-            else if (pointer[0] == 251 || pointer[0] == 253) { return 1 }     // zombie
+            else if (pointer[0] == 253) { return 1 }     // zombie
         }
         
 //        if (pointer[0] != 0) {

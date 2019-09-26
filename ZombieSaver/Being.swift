@@ -140,7 +140,7 @@ class Being {
         if (type == 1) {
             if (target == 2 || target == 4) { active = 15 }
             
-            if (active == 0 /*&& target != 1*/) {       // shouldn't zombies be allowed to change direction?
+            if (active == 0 && target != 1) {       // shouldn't zombies be allowed to change direction?
                 dir = Int32((arc4random() % 4) + 1)
             }
             
@@ -201,8 +201,8 @@ class Being {
             
             // let's first check if we are moving up. If we are, we will encounter our own color, so we need to check the next pixel after that
             if dir == 3 {
-                if (type == 1 && (pointer[0] == 254 || pointer[0] == 255) ||
-                    type == 2 && ((pointer[1] == 254 || pointer[1] == 255) || (pointer[0] == 254 || pointer[0] == 255) && (pointer[1] == 254 || pointer[1] == 255))) { // human or panic human
+                if (type == 1 && isZombieColor(pointer) ||
+                    type == 2 && (isHumanColor(pointer) || isPanicHumanColor(pointer))) { // human or panic human
                     
                     tempY = tempY + 1
                     ZombieSaverView.view?.pixelOfPoint(p: pointer, xpos: Int(tempX*2), ypos: Int(tempY*2))
@@ -210,31 +210,31 @@ class Being {
                     if (tempX > Int32(ZombieSaverView.view!.frame.size.width - 1) || tempX < 1 || tempY > Int32(ZombieSaverView.view!.frame.size.height - 1) || tempY < 1) {
                         return 3
                     }
-                    else if (pointer[0] == 67) {
+                    else if isWallColor(pointer) {
                         return 3        // ZombieSaverView.wall
                     }
-                    else if ((pointer[0] == 254 || pointer[0] == 255) && (pointer[1] == 254 || pointer[1] == 255)) {
+                    else if isPanicHumanColor(pointer) {
                         return 4        // panic human
                     }
-                    else if (pointer[1] == 254 || pointer[1] == 255) {
+                    else if isHumanColor(pointer) {
                         return 2        // human
                     }
-                    else if (pointer[0] == 253 || pointer[0] == 254 || pointer[0] == 255) {
+                    else if isZombieColor(pointer) {
                         return 1
                     }
                 }
             }
             else {
-                if (pointer[0] == 67) {
+                if isWallColor(pointer) {
                     return 3        // ZombieSaverView.wall
                 }
-                else if ((pointer[0] == 254 || pointer[0] == 255) && (pointer[1] == 254 || pointer[1] == 255)) {
+                else if isPanicHumanColor(pointer) {
                     return 4        // panic human
                 }
-                else if (pointer[1] == 254 || pointer[1] == 255) {
+                else if isHumanColor(pointer) {
                     return 2        // human
                 }
-                else if (pointer[0] == 253 || pointer[0] == 254 || pointer[0] == 255) {
+                else if isZombieColor(pointer) {
                     return 1
                 }
             }

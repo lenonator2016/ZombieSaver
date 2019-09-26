@@ -47,6 +47,7 @@ class ZombieSaverView: ScreenSaverView {
     var zombieLabel:NSTextField!
     var showLabels = false
     var initialNumberOfZombies = 1
+    var makeBuildings = true
     var bitmapImageRep:NSBitmapImageRep?
     override var acceptsFirstResponder: Bool { return true }
     
@@ -63,10 +64,7 @@ class ZombieSaverView: ScreenSaverView {
         ZombieSaverView.view = self
         bitmapImageRep = bitmapImageRepForCachingDisplay(in: self.visibleRect)
         
-        createBuildings()
-        createLabels()
-        createBeings()
-        updateLabels()
+        createSimulation()
     }
     
     @available(*, unavailable)
@@ -78,32 +76,44 @@ class ZombieSaverView: ScreenSaverView {
         self.resignFirstResponder()
     }
     
+    private func createSimulation() {
+        createBuildings()
+        createLabels()
+        createBeings()
+        updateLabels()
+    }
+    
     private func createBuildings() {
-        var maxWidth = CGFloat(frame.size.width) * 0.24
-        var maxHeight = CGFloat(frame.size.height) * 0.24
+        bigRects.removeAll()
+        smallRects.removeAll()
         
-        for _ in 0..<numBigRects {
-            let origin = CGPoint(x: SSRandomFloatBetween(0.0, CGFloat(frame.size.width - 1)).rounded() + 1.0,
-                                 y: SSRandomFloatBetween(0.0, CGFloat(frame.size.height - 1)).rounded() + 1.0)
+        if makeBuildings {
+            var maxWidth = CGFloat(frame.size.width) * 0.24
+            var maxHeight = CGFloat(frame.size.height) * 0.24
             
-            let size = NSSize(width: (SSRandomFloatBetween(0.0, maxWidth) + CGFloat(frame.size.width) * 0.04).rounded(),
-                              height: (SSRandomFloatBetween(0.0, maxHeight) + CGFloat(frame.size.height) * 0.04).rounded())
+            for _ in 0..<numBigRects {
+                let origin = CGPoint(x: SSRandomFloatBetween(0.0, CGFloat(frame.size.width - 1)).rounded() + 1.0,
+                                     y: SSRandomFloatBetween(0.0, CGFloat(frame.size.height - 1)).rounded() + 1.0)
+                
+                let size = NSSize(width: (SSRandomFloatBetween(0.0, maxWidth) + CGFloat(frame.size.width) * 0.04).rounded(),
+                                  height: (SSRandomFloatBetween(0.0, maxHeight) + CGFloat(frame.size.height) * 0.04).rounded())
+                
+                bigRects.append(NSRect(origin: origin, size: size))
+            }
             
-            bigRects.append(NSRect(origin: origin, size: size))
-        }
-        
-        // set small building params
-        maxWidth = CGFloat(frame.size.width) * 0.08
-        maxHeight = CGFloat(frame.size.height) * 0.08
-        
-        for _ in 0..<numSmallRects {
-            let origin = CGPoint(x: SSRandomFloatBetween(0.0, CGFloat(frame.size.width - 1)).rounded() + 1.0,
-                                 y: SSRandomFloatBetween(0.0, CGFloat(frame.size.height - 1)).rounded() + 1.0)
+            // set small building params
+            maxWidth = CGFloat(frame.size.width) * 0.08
+            maxHeight = CGFloat(frame.size.height) * 0.08
             
-            let size = NSSize(width: (SSRandomFloatBetween(0.0, maxWidth) + CGFloat(frame.size.width) * 0.08).rounded(),
-                              height: (SSRandomFloatBetween(0.0, maxHeight) + CGFloat(frame.size.height) * 0.08).rounded())
-            
-            smallRects.append(NSRect(origin: origin, size: size))
+            for _ in 0..<numSmallRects {
+                let origin = CGPoint(x: SSRandomFloatBetween(0.0, CGFloat(frame.size.width - 1)).rounded() + 1.0,
+                                     y: SSRandomFloatBetween(0.0, CGFloat(frame.size.height - 1)).rounded() + 1.0)
+                
+                let size = NSSize(width: (SSRandomFloatBetween(0.0, maxWidth) + CGFloat(frame.size.width) * 0.08).rounded(),
+                                  height: (SSRandomFloatBetween(0.0, maxHeight) + CGFloat(frame.size.height) * 0.08).rounded())
+                
+                smallRects.append(NSRect(origin: origin, size: size))
+            }
         }
     }
     
@@ -160,6 +170,10 @@ class ZombieSaverView: ScreenSaverView {
         let keyCode = event.keyCode
         
         switch keyCode {
+        case 45:
+            makeBuildings = !makeBuildings
+            createSimulation()
+            
         case 37:        // l - show/hide labels
             showLabels = !showLabels
             updateLabels()
@@ -313,7 +327,7 @@ class ZombieSaverView: ScreenSaverView {
         NSColor.black.setFill()
         self.visibleRect.fill()
         
-        for i in 0..<numBigRects {
+        for i in 0..<bigRects.count {
             ZombieSaverView.wall.setFill()
             bigRects[i].fill()
             NSColor.black.setStroke()
@@ -322,8 +336,10 @@ class ZombieSaverView: ScreenSaverView {
             bp.stroke()
         }
 
-        NSColor.black.setFill()
-        smallRects.fill()
+        if smallRects.count > 0 {
+            NSColor.black.setFill()
+            smallRects.fill()
+        }
     }
     
     func updateLabels() {

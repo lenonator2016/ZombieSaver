@@ -17,13 +17,44 @@ class Being {
     var active = 0
     var myID = 0
     
-    let zombie =      NSColor.red
-    let human = NSColor.green
-    let panicHuman = NSColor.yellow
+//    let zombie =  NSColor(deviceRed: 1.0, green: 0.0, blue: 0.0, alpha: 1.0)                   //NSColor.red
+//    let human = NSColor(deviceRed: 0.0, green: 1.0, blue: 0.0, alpha: 1.0)                    //NSColor.green
+//    let panicHuman = NSColor(deviceRed: 1.0, green: 1.0, blue: 0.0, alpha: 1.0)             // NSColor.yellow
+    
+    let zombie:NSColor!
+    let human:NSColor!
+    let panicHuman:NSColor!
     
     init(elementID: Int) {
         dir = SSRandomIntBetween(0, 1) + 1
         myID = elementID
+        
+        var pointer = UnsafeMutablePointer<CGFloat>.allocate(capacity: 4)
+        pointer[0] = 1.0
+        pointer[1] = 0.0
+        pointer[2] = 0.0
+        pointer[3] = 1.0
+        
+        zombie = NSColor(colorSpace: .genericRGB, components: pointer, count: 4)
+        pointer.deallocate()
+        
+        pointer = UnsafeMutablePointer<CGFloat>.allocate(capacity: 4)
+        pointer[0] = 0.0
+        pointer[1] = 1.0
+        pointer[2] = 0.0
+        pointer[3] = 1.0
+        
+        human = NSColor(colorSpace: .genericRGB, components: pointer, count: 4)
+        pointer.deallocate()
+        
+        pointer = UnsafeMutablePointer<CGFloat>.allocate(capacity: 4)
+        pointer[0] = 1.0
+        pointer[1] = 1.0
+        pointer[2] = 0.0
+        pointer[3] = 1.0
+        
+        panicHuman = NSColor(colorSpace: .genericRGB, components: pointer, count: 4)
+        pointer.deallocate()
     }
     
     func position() {
@@ -32,7 +63,7 @@ class Being {
         
         let pointer = UnsafeMutablePointer<Int>.allocate(capacity: 4)
         
-        for i in 0..<2000 {
+        for _ in 0..<2000 {
             
             xpos = SSRandomIntBetween(1, Int32(rect.size.width) - 1) + 1
             ypos = SSRandomIntBetween(1, Int32(rect.size.height) - 1) + 1
@@ -65,7 +96,6 @@ class Being {
             
             if type != 1 {
                 type = 1
-                ZombieSaverView.view?.updateLabels()
 //                let sound = NSSound(contentsOfFile: Bundle.main.path(forSoundResource: "infected") ?? "", byReference: false)
 //                sound?.play()
             }
@@ -74,12 +104,10 @@ class Being {
     
     func infect() {
         type = 1
-        ZombieSaverView.view?.updateLabels()
     }
     
     func uninfect() {
         type = 2
-        ZombieSaverView.view?.updateLabels()
     }
     
     func draw() {
@@ -113,10 +141,6 @@ class Being {
             
             if (active > 0) {
                 active = active - 1
-                
-                if active == 0 {
-                    ZombieSaverView.view?.updateLabels()
-                }
             }
         }
         
@@ -178,37 +202,52 @@ class Being {
             if (d == 4) { tempX = tempX - 1 }
 
             ZombieSaverView.view?.pixelOfPoint(p: pointer, xpos: Int(tempX*2), ypos: Int(tempY*2))
+            
+//            if pointer[0] != 0 && pointer[0] != 67 && pointer[0] != 255 {
+//                print( "\(pointer[0]) \(pointer[1]) \(pointer[2])")
+//            }
 
-            if (tempX > Int32(ZombieSaverView.view!.frame.size.width - 1) || tempX < 1 || tempY > Int32(ZombieSaverView.view!.frame.size.height - 1) || tempY < 1) { return 3 }
-            else if (pointer[0] == 67) {        // ZombieSaverView.wall
-                return 3
+            if (tempX > Int32(ZombieSaverView.view!.frame.size.width - 1) || tempX < 1 || tempY > Int32(ZombieSaverView.view!.frame.size.height - 1) || tempY < 1) {
+                return 3            // ZombieSaverView.wall
+            }
+            else if (pointer[0] == 67) {
+                return 3            // ZombieSaverView.wall
             }
             else if ((pointer[0] == 254 || pointer[0] == 255) &&
                 (pointer[1] == 254 || pointer[1] == 255)) {     // panic human
                 return 4
             }
-            else if (pointer[0] == 34 || pointer[0] == 35) {    // human
+            // Tired note to self! I think we need to do this up check for EVERY being, not just humans
+            // both zombies and humans can be moving up!!
+            // Hmmm, for some reason, after the zombies start getting going, we don't get any more panicked humans, why??
+            else if ((pointer[0] == 254 || pointer[0] == 255) || (pointer[1] == 254 || pointer[1] == 255)) {    // human
                 // if I'm moving up, the next pixel will be my color, so check the next pixel after THAT
                 if dir == 3 && tempY - 1 == y {
                     tempY = tempY + 1
                     ZombieSaverView.view?.pixelOfPoint(p: pointer, xpos: Int(tempX*2), ypos: Int(tempY*2))
                     if (tempX > Int32(ZombieSaverView.view!.frame.size.width - 1) || tempX < 1 || tempY > Int32(ZombieSaverView.view!.frame.size.height - 1) || tempY < 1) { return 3 }
-                    else if (pointer[0] == 67) { return 3 } // ZombieSaverView.wall
+                    else if (pointer[0] == 67) {
+                        return 3        // ZombieSaverView.wall
+                    }
                     else if ((pointer[0] == 254 || pointer[0] == 255) &&
-                        (pointer[1] == 254 || pointer[1] == 255)) { return 4 } // panic human
-                    else if (pointer[0] == 34 || pointer[0] == 35) { return 2 }
+                        (pointer[1] == 254 || pointer[1] == 255)) {
+                        return 4        // panic human
+                    }
+                    else if (pointer[1] == 254 || pointer[1] == 255) {
+                        return 2        // human
+                    }
                 }
                 else {
                     // we are not moving up, we encountered a human so return that
                     return 2
                 }
             }
-            else if (pointer[0] == 253) { return 1 }     // zombie
+            else if (pointer[0] == 253 || pointer[0] == 254 || pointer[0] == 255) {
+            // else if (pointer[0] == 253) {
+               // print( "\(pointer[0]) \(pointer[1]) \(pointer[2])")
+                return 1    // zombie
+            }
         }
-        
-//        if (pointer[0] != 0) {
-//            print("Found weird color: \(pointer[0])")
-//        }
 
         return 0
     }

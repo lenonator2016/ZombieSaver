@@ -6,6 +6,16 @@
 //  Copyright © 2019 Lenco Software, LLC. All rights reserved.
 //
 
+/* Ideas for future:
+ 
+    Add the ability to add a "Zombie Killer" human who hunts and kills zombies
+        When zombies are killed, openGL type fireworks explosion
+ 
+    Add a keystroke that will toggle on/off two pixel mode
+        beings are two pixels wide and tall
+ 
+ */
+
 import ScreenSaver
 
 struct Pixel {
@@ -17,7 +27,7 @@ struct Pixel {
 
 class ZombieSaverView: ScreenSaverView {
     
-    static var numBeings = 5000
+    static var numBeings = 6000
     static var speed = 1
     static var panic = 5
     static var wall = NSColor(deviceRed: 85.0/255.0, green: 85.0/255.0, blue: 85.0/255.0, alpha: 1.0)  // NSColor.darkGray
@@ -36,6 +46,7 @@ class ZombieSaverView: ScreenSaverView {
     var panickedLabel:NSTextField!
     var zombieLabel:NSTextField!
     var showLabels = false
+    var initialNumberOfZombies = 1
     var bitmapImageRep:NSBitmapImageRep?
     override var acceptsFirstResponder: Bool { return true }
     
@@ -149,38 +160,60 @@ class ZombieSaverView: ScreenSaverView {
         let keyCode = event.keyCode
         
         switch keyCode {
-        case 37:        // l
+        case 37:        // l - show/hide labels
             showLabels = !showLabels
             updateLabels()
             
-        case 49:    // space
-            for i in 0..<ZombieSaverView.numBeings {
-                ZombieSaverView.beings[i].uninfect()
-                }
-            let index = Int(SSRandomIntBetween(0, Int32(ZombieSaverView.numBeings - 1)))
-            ZombieSaverView.beings[index].infect()
+        case 18:
+            initialNumberOfZombies = 1
+            resetSimulation()
             
-        case 1:     // s
+        case 19:
+            initialNumberOfZombies = 2
+            resetSimulation()
+            
+        case 20:
+            initialNumberOfZombies = 3
+            resetSimulation()
+            
+        case 21:
+            initialNumberOfZombies = 4
+            resetSimulation()
+            
+        case 23:
+            initialNumberOfZombies = 5
+            resetSimulation()
+        
+        
+        case 49:        // space - reset simulation
+            resetSimulation()
+            
+        case 1:         // s - adjust speed
                 ZombieSaverView.speed = ZombieSaverView.speed + 1
                 if ZombieSaverView.speed > 4 { ZombieSaverView.speed = 1 }
             
-        case 35:    // p
+        case 35:        // p
             ZombieSaverView.panic = 5 - ZombieSaverView.panic
             
-        case 5:     // g
-            freeze = 0
+        case 3:         // f - toggle freeze
+            if freeze == 1 {
+                freeze = 0
+            }
+            else {
+                freeze = 1
+            }
             break
             
-        case 24:        // +
+        case 24:        // + - increase zombie count
             fallthrough
         case 69:        // +
-            if ZombieSaverView.numBeings < 5000 {
+            if ZombieSaverView.numBeings < 6000 {
                 ZombieSaverView.numBeings = ZombieSaverView.numBeings + 100
                 createBeings()
                 updateLabels()
             }
             
-        case 27 :    // -
+        case 27 :    // - decrease zombie count
             fallthrough
         case 78:    // -
             if ZombieSaverView.numBeings > 100 {
@@ -188,10 +221,8 @@ class ZombieSaverView: ScreenSaverView {
                 createBeings()
                 updateLabels()
             }
-        case 6:     // z
-            freeze = 1
             
-        case 8:     // c
+        case 8:     // c - draw circle around zombies
             // set a flag to draw circle around each zombie
             circleZombies = true
             
@@ -202,6 +233,22 @@ class ZombieSaverView: ScreenSaverView {
         
         default:
                 super.keyDown(with: event)
+        }
+    }
+    
+    private func resetSimulation() {
+        for i in 0..<ZombieSaverView.numBeings {
+            ZombieSaverView.beings[i].uninfect()
+            ZombieSaverView.beings[i].active = 0
+        }
+        
+        for i in 0..<initialNumberOfZombies {
+            var index = Int(SSRandomIntBetween(0, Int32(ZombieSaverView.numBeings - 1)))
+            if ZombieSaverView.beings[index].type == 1 {
+                // try again
+                index = Int(SSRandomIntBetween(0, Int32(ZombieSaverView.numBeings - 1)))
+            }
+            ZombieSaverView.beings[index].infect()
         }
     }
     
@@ -254,6 +301,8 @@ class ZombieSaverView: ScreenSaverView {
             else if (ZombieSaverView.speed == 3) { sleep(50/1000) }
             else if (ZombieSaverView.speed == 4) { sleep(100/1000) }
         }
+        
+        updateLabels()
         
         setNeedsDisplay(self.bounds)
     }

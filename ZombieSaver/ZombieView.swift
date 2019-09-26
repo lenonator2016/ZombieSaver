@@ -242,7 +242,7 @@ class ZombieSaverView: ScreenSaverView {
             ZombieSaverView.beings[i].active = 0
         }
         
-        for i in 0..<initialNumberOfZombies {
+        for _ in 0..<initialNumberOfZombies {
             var index = Int(SSRandomIntBetween(0, Int32(ZombieSaverView.numBeings - 1)))
             if ZombieSaverView.beings[index].type == 1 {
                 // try again
@@ -318,7 +318,7 @@ class ZombieSaverView: ScreenSaverView {
             bigRects[i].fill()
             NSColor.black.setStroke()
             let bp = NSBezierPath.init(rect: bigRects[i])
-            bp.lineWidth = 2.0
+            bp.lineWidth = 3.0
             bp.stroke()
         }
 

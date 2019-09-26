@@ -63,27 +63,18 @@ class Being {
         
         let pointer = UnsafeMutablePointer<Int>.allocate(capacity: 4)
         
-        for _ in 0..<2000 {
+        for i in 0..<2000 {
             
             xpos = SSRandomIntBetween(1, Int32(rect.size.width) - 1) + 1
             ypos = SSRandomIntBetween(1, Int32(rect.size.height) - 1) + 1
             
             ZombieSaverView.view?.pixelOfPoint(p: pointer, xpos: Int(xpos*2), ypos: Int(ypos*2))
             
-            if (pointer[0] == 0 && pointer[1] == 0 && pointer[2] == 0) {
-                ypos = ypos - 1
-                ZombieSaverView.view?.pixelOfPoint(p: pointer, xpos: Int(xpos*2), ypos: Int(ypos*2))
-                if (pointer[0] == 0 && pointer[1] == 0 && pointer[2] == 0) {
-                    break
-                }
+            if (isBlackColor(pointer)) {
+                break
             }
-//            else if pointer[0] != 67 && pointer[0] != 0 {
-//                print("did not find black")
-//            }
-//            
-//            if i == 1999 {
-//                print("could not find spot!")
-//            }
+ 
+            assert((i != 1999), "Could not find a black spot!")
         }
         
         pointer.deallocate()
@@ -144,12 +135,12 @@ class Being {
             }
         }
         
-        let target = look(x: xpos, y: ypos, d: dir, dist: 20)
+        let target = look(x: xpos, y: ypos, d: dir, dist: 10)
         
         if (type == 1) {
-            if (target == 2 || target == 4) { active = 10 }
+            if (target == 2 || target == 4) { active = 15 }
             
-            if (active == 0 && target != 1) {
+            if (active == 0 /*&& target != 1*/) {       // shouldn't zombies be allowed to change direction?
                 dir = Int32((arc4random() % 4) + 1)
             }
             
@@ -168,15 +159,15 @@ class Being {
                 }
             }
         }
-        if (type == 2)
+        if type == 2
         {
             // if we see a zombie or panicked human, we get more active
-            if (target == 1 || target == 4){
-                active = 10
+            if target == 1 || target == 4 {
+                active = 15
             }
             
             // run away from zombie?
-            if (target == 1) {
+            if target == 1 {
                 dir = dir + 2
                 if (dir > 4) { dir = dir - 4 }
             }
@@ -202,110 +193,84 @@ class Being {
             if (d == 4) { tempX = tempX - 1 }
 
             ZombieSaverView.view?.pixelOfPoint(p: pointer, xpos: Int(tempX*2), ypos: Int(tempY*2))
-            
-//            if pointer[0] != 0 && pointer[0] != 67 && pointer[0] != 255 {
-//                print( "\(pointer[0]) \(pointer[1]) \(pointer[2])")
-//            }
 
-            if (tempX > Int32(ZombieSaverView.view!.frame.size.width - 1) || tempX < 1 || tempY > Int32(ZombieSaverView.view!.frame.size.height - 1) || tempY < 1) {
+            // are we out of bounds?
+            if tempX > Int32(ZombieSaverView.view!.frame.size.width - 1) || tempX < 1 || tempY > Int32(ZombieSaverView.view!.frame.size.height - 1) || tempY < 1 {
                 return 3            // ZombieSaverView.wall
             }
-            else if (pointer[0] == 67) {
-                return 3            // ZombieSaverView.wall
-            }
-            else if ((pointer[0] == 254 || pointer[0] == 255) &&
-                (pointer[1] == 254 || pointer[1] == 255)) {     // panic human
-                return 4
-            }
-            // Tired note to self! I think we need to do this up check for EVERY being, not just humans
-            // both zombies and humans can be moving up!!
-            // Hmmm, for some reason, after the zombies start getting going, we don't get any more panicked humans, why??
-            else if ((pointer[0] == 254 || pointer[0] == 255) || (pointer[1] == 254 || pointer[1] == 255)) {    // human
-                // if I'm moving up, the next pixel will be my color, so check the next pixel after THAT
-                if dir == 3 && tempY - 1 == y {
+            
+            // let's first check if we are moving up. If we are, we will encounter our own color, so we need to check the next pixel after that
+            if dir == 3 {
+                if (type == 1 && (pointer[0] == 254 || pointer[0] == 255) ||
+                    type == 2 && ((pointer[1] == 254 || pointer[1] == 255) || (pointer[0] == 254 || pointer[0] == 255) && (pointer[1] == 254 || pointer[1] == 255))) { // human or panic human
+                    
                     tempY = tempY + 1
                     ZombieSaverView.view?.pixelOfPoint(p: pointer, xpos: Int(tempX*2), ypos: Int(tempY*2))
-                    if (tempX > Int32(ZombieSaverView.view!.frame.size.width - 1) || tempX < 1 || tempY > Int32(ZombieSaverView.view!.frame.size.height - 1) || tempY < 1) { return 3 }
+                    
+                    if (tempX > Int32(ZombieSaverView.view!.frame.size.width - 1) || tempX < 1 || tempY > Int32(ZombieSaverView.view!.frame.size.height - 1) || tempY < 1) {
+                        return 3
+                    }
                     else if (pointer[0] == 67) {
                         return 3        // ZombieSaverView.wall
                     }
-                    else if ((pointer[0] == 254 || pointer[0] == 255) &&
-                        (pointer[1] == 254 || pointer[1] == 255)) {
+                    else if ((pointer[0] == 254 || pointer[0] == 255) && (pointer[1] == 254 || pointer[1] == 255)) {
                         return 4        // panic human
                     }
                     else if (pointer[1] == 254 || pointer[1] == 255) {
                         return 2        // human
                     }
-                }
-                else {
-                    // we are not moving up, we encountered a human so return that
-                    return 2
+                    else if (pointer[0] == 253 || pointer[0] == 254 || pointer[0] == 255) {
+                        return 1
+                    }
                 }
             }
-            else if (pointer[0] == 253 || pointer[0] == 254 || pointer[0] == 255) {
-            // else if (pointer[0] == 253) {
-               // print( "\(pointer[0]) \(pointer[1]) \(pointer[2])")
-                return 1    // zombie
+            else {
+                if (pointer[0] == 67) {
+                    return 3        // ZombieSaverView.wall
+                }
+                else if ((pointer[0] == 254 || pointer[0] == 255) && (pointer[1] == 254 || pointer[1] == 255)) {
+                    return 4        // panic human
+                }
+                else if (pointer[1] == 254 || pointer[1] == 255) {
+                    return 2        // human
+                }
+                else if (pointer[0] == 253 || pointer[0] == 254 || pointer[0] == 255) {
+                    return 1
+                }
             }
         }
 
         return 0
     }
     
-    // alternate version using colorAtPoint
-//    func look(x: Int32, y: Int32, d: Int32, dist: Int32) -> Int32 {
-//
-//        var tempX = x
-//        var tempY = y
-//
-//        for _ in 0..<dist {
-//            if (d == 1) { tempY = tempY - 1 }
-//            if (d == 2) { tempX = tempX + 1 }
-//            if (d == 3) { tempY = tempY + 1 }
-//            if (d == 4) { tempX = tempX - 1 }
-//
-//            guard let color = ZombieSaverView.view?.colorOfPoint(xpos: Int(tempX*2), ypos: Int(tempY*2)) else { return 0 }
-//
-//            print("\(color.redComponent), \(color.greenComponent), \(color.blueComponent)")
-//
-//            if (tempX > Int32(ZombieSaverView.view!.frame.size.width - 1) || tempX < 1 || tempY > Int32(ZombieSaverView.view!.frame.size.height - 1) || tempY < 1) {
-//                return 3
-//            }
-//            else if (color.redComponent == 67) {
-//                return 3
-//            } // ZombieSaverView.wall
-//            else if (color.redComponent == 255 && color.blueComponent == 255) {
-//                return 4
-//            } // panic human
-//            else if (color.redComponent == 34 || color.redComponent == 35) {    // human
-//                // if I'm moving up, the next pixel will be my color, so check the next pixel after THAT
-//                if dir == 3 && tempY - 1 == y {
-//                    tempY = tempY + 1
-//                    guard let color2 = ZombieSaverView.view?.colorOfPoint(xpos: Int(tempX*2), ypos: Int(tempY*2)) else { return 0 }
-//                    if (tempX > Int32(ZombieSaverView.view!.frame.size.width - 1) || tempX < 1 || tempY > Int32(ZombieSaverView.view!.frame.size.height - 1) || tempY < 1) { return 3 }
-//                    else if (color2.redComponent == 67) { // ZombieSaverView.wall
-//                        return 3
-//                    }
-//                    else if (color2.redComponent == 255 && color2.blueComponent == 255) { // panic human
-//                        return 4
-//                    }
-//                    else if (color2.redComponent == 34 || color2.redComponent == 35) {
-//                        return 2
-//                    }
-//                    else if (color2.redComponent == 251 || color2.redComponent == 253) { // zombie
-//                        return 1
-//                    }
-//                }
-//                else {
-//                    // we are not moving up, we encountered a human so return that
-//                    return 2
-//                }
-//            }
-//            else if (color.redComponent == 251 || color.redComponent == 253) { return 1 }     // zombie
-//        }
-//
-//        return 0
-//    }
+    func isBlackColor(_ pointer: UnsafeMutablePointer<Int>) -> Bool {
+        if (pointer[0] == 0 && pointer[1] == 0 && pointer[2] == 0) {
+            return true
+        }
+        else if pointer[0] == 67 && pointer[67] == 0 && pointer[67] == 0 {
+            return false
+        }
+        else {
+            return false
+        }
+    }
+    
+    func isWallColor(_ pointer: UnsafeMutablePointer<Int>) -> Bool {
+        return (pointer[0] == 67 && pointer[1] == 67 && pointer[2] == 67)
+    }
+    
+    func isHumanColor(_ pointer: UnsafeMutablePointer<Int>) -> Bool {
+        return (pointer[1] == 254 || pointer[1] == 255)
+    }
+    
+    func isZombieColor(_ pointer: UnsafeMutablePointer<Int>) -> Bool {
+        return (pointer[0] == 253 || pointer[0] == 254 || pointer[0] == 255)
+    }
+    
+    func isPanicHumanColor(_ pointer: UnsafeMutablePointer<Int>) -> Bool {
+        return ((pointer[0] == 254 || pointer[0] == 255) &&
+            (pointer[1] == 254 || pointer[1] == 255))
+    }
     
     func setPixel(x: Int32, y: Int32, type: NSColor) {
         let rect = NSRect(x: CGFloat(x), y: CGFloat(y), width: 1.0, height: 1.0)

@@ -17,44 +17,9 @@ class Being {
     var active = 0
     var myID = 0
     
-//    let zombie =  NSColor(deviceRed: 1.0, green: 0.0, blue: 0.0, alpha: 1.0)                   //NSColor.red
-//    let human = NSColor(deviceRed: 0.0, green: 1.0, blue: 0.0, alpha: 1.0)                    //NSColor.green
-//    let panicHuman = NSColor(deviceRed: 1.0, green: 1.0, blue: 0.0, alpha: 1.0)             // NSColor.yellow
-    
-    let zombie:NSColor!
-    let human:NSColor!
-    let panicHuman:NSColor!
-    
     init(elementID: Int) {
         dir = SSRandomIntBetween(0, 1) + 1
         myID = elementID
-        
-        var pointer = UnsafeMutablePointer<CGFloat>.allocate(capacity: 4)
-        pointer[0] = 1.0
-        pointer[1] = 0.0
-        pointer[2] = 0.0
-        pointer[3] = 1.0
-        
-        zombie = NSColor(colorSpace: .genericRGB, components: pointer, count: 4)
-        pointer.deallocate()
-        
-        pointer = UnsafeMutablePointer<CGFloat>.allocate(capacity: 4)
-        pointer[0] = 0.0
-        pointer[1] = 1.0
-        pointer[2] = 0.0
-        pointer[3] = 1.0
-        
-        human = NSColor(colorSpace: .genericRGB, components: pointer, count: 4)
-        pointer.deallocate()
-        
-        pointer = UnsafeMutablePointer<CGFloat>.allocate(capacity: 4)
-        pointer[0] = 1.0
-        pointer[1] = 1.0
-        pointer[2] = 0.0
-        pointer[3] = 1.0
-        
-        panicHuman = NSColor(colorSpace: .genericRGB, components: pointer, count: 4)
-        pointer.deallocate()
     }
     
     func position() {
@@ -63,19 +28,17 @@ class Being {
         
         let pointer = UnsafeMutablePointer<Int>.allocate(capacity: 4)
         
-        for i in 0..<2000 {
+        for _ in 0..<2000 {
             
             xpos = SSRandomIntBetween(1, Int32(rect.size.width) - 1) + 1
             ypos = SSRandomIntBetween(1, Int32(rect.size.height) - 1) + 1
             
-            ZombieSaverView.view?.pixelOfPoint(p: pointer, xpos: Int(xpos*2), ypos: Int(ypos*2))
+            ZombieSaverView.view?.pixelOfPoint(p: pointer, xpos: Int(xpos), ypos: Int(ypos))
             
-            if (isBlackColor(pointer)) {
+            if isBlackColor(pointer) {
                 break
             }
- 
-            assert((i != 1999), "Could not find a black spot!")
-        }
+         }
         
         pointer.deallocate()
     }
@@ -102,14 +65,14 @@ class Being {
     }
     
     func draw() {
-        if (type == 1) {
-            setPixel(x: xpos, y: ypos, type: zombie)
+        if type == 1 {
+            setPixel(x: xpos, y: ypos, type: ZombieSaverView.zombieColor)
         }
-        else if (active > 0) {
-            setPixel(x: xpos, y: ypos, type: panicHuman)
+        else if active > 0 {
+            setPixel(x: xpos, y: ypos, type: ZombieSaverView.panicHumanColor)
         }
         else {
-            setPixel(x: xpos, y: ypos, type: human)
+            setPixel(x: xpos, y: ypos, type: ZombieSaverView.humanColor)
         }
     }
     
@@ -137,16 +100,16 @@ class Being {
         
         let target = look(x: xpos, y: ypos, d: dir, dist: 10)
         
-        if (type == 1) {
-            if (target == 2 || target == 4) { active = 15 }
+        if type == 1 {
+            if target == 2 || target == 4 { active = 15 }
             
-            if (active == 0 && target != 1) {       // shouldn't zombies be allowed to change direction?
+            if active == 0 && target != 1 {       // shouldn't zombies be allowed to change direction?
                 dir = Int32((arc4random() % 4) + 1)
             }
             
             let victim = look(x: xpos, y: ypos, d: dir, dist: 2)
             
-            if (victim == 2 || victim == 4) {
+            if victim == 2 || victim == 4 {
                 var ix = xpos
                 var iy = ypos
                 if (dir == 1) { iy = iy - 1 }
@@ -192,7 +155,7 @@ class Being {
             if (d == 3) { tempY = tempY + 1 }
             if (d == 4) { tempX = tempX - 1 }
 
-            ZombieSaverView.view?.pixelOfPoint(p: pointer, xpos: Int(tempX*2), ypos: Int(tempY*2))
+            ZombieSaverView.view?.pixelOfPoint(p: pointer, xpos: Int(tempX), ypos: Int(tempY))
 
             // are we out of bounds?
             if tempX > Int32(ZombieSaverView.view!.frame.size.width - 1) || tempX < 1 || tempY > Int32(ZombieSaverView.view!.frame.size.height - 1) || tempY < 1 {
@@ -205,7 +168,7 @@ class Being {
                     type == 2 && (isHumanColor(pointer) || isPanicHumanColor(pointer))) { // human or panic human
                     
                     tempY = tempY + 1
-                    ZombieSaverView.view?.pixelOfPoint(p: pointer, xpos: Int(tempX*2), ypos: Int(tempY*2))
+                    ZombieSaverView.view?.pixelOfPoint(p: pointer, xpos: Int(tempX), ypos: Int(tempY))
                     
                     if (tempX > Int32(ZombieSaverView.view!.frame.size.width - 1) || tempX < 1 || tempY > Int32(ZombieSaverView.view!.frame.size.height - 1) || tempY < 1) {
                         return 3

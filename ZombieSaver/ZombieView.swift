@@ -18,13 +18,6 @@
 
 import ScreenSaver
 
-struct Pixel {
-    var r:UInt8 = 0
-    var g:UInt8 = 0
-    var b:UInt8 = 0
-    var a:UInt8 = 0
-}
-
 class ZombieSaverView: ScreenSaverView {
     
     static var numBeings = 6000
@@ -33,6 +26,10 @@ class ZombieSaverView: ScreenSaverView {
     static var wall = NSColor(deviceRed: 85.0/255.0, green: 85.0/255.0, blue: 85.0/255.0, alpha: 1.0)  // NSColor.darkGray
     static var beings:[Being] = []
     static var view:ZombieSaverView?
+    
+    static var zombieColor:NSColor!     // red
+    static var humanColor:NSColor!      // green
+    static var panicHumanColor:NSColor! // blue
     
     var beingsPositioned = false
     var freeze = 0
@@ -64,6 +61,7 @@ class ZombieSaverView: ScreenSaverView {
         ZombieSaverView.view = self
         bitmapImageRep = bitmapImageRepForCachingDisplay(in: self.visibleRect)
         
+        createColors()
         createSimulation()
     }
     
@@ -74,6 +72,32 @@ class ZombieSaverView: ScreenSaverView {
     
     deinit {
         self.resignFirstResponder()
+    }
+    
+    private func createColors() {
+        let pointer = UnsafeMutablePointer<CGFloat>.allocate(capacity: 4)
+        pointer[0] = 1.0
+        pointer[1] = 0.0
+        pointer[2] = 0.0
+        pointer[3] = 1.0
+        
+        ZombieSaverView.zombieColor = NSColor(colorSpace: .genericRGB, components: pointer, count: 4)
+        
+        pointer[0] = 0.0
+        pointer[1] = 1.0
+        pointer[2] = 0.0
+        pointer[3] = 1.0
+        
+        ZombieSaverView.humanColor = NSColor(colorSpace: .genericRGB, components: pointer, count: 4)
+        
+        pointer[0] = 1.0
+        pointer[1] = 1.0
+        pointer[2] = 0.0
+        pointer[3] = 1.0
+        
+        ZombieSaverView.panicHumanColor = NSColor(colorSpace: .genericRGB, components: pointer, count: 4)
+        
+        pointer.deallocate()
     }
     
     private func createSimulation() {
@@ -385,10 +409,8 @@ class ZombieSaverView: ScreenSaverView {
     // Note - this function is correct. We pass in X and Y coordinates already multiplied by two to account for the
     // retina scale of the bitmap
     func pixelOfPoint( p: UnsafeMutablePointer<Int>, xpos: Int, ypos: Int) {
-        bitmapImageRep?.getPixel(p, atX: xpos, y: Int(self.visibleRect.size.height * 2) - ypos)
-    }
-    
-    func colorOfPoint(xpos: Int, ypos: Int) -> NSColor? {
-        return bitmapImageRep?.colorAt(x: xpos, y: Int(self.visibleRect.size.height * 2) - ypos)
+        
+        let scale = NSScreen.main!.backingScaleFactor
+        bitmapImageRep?.getPixel(p, atX: xpos * Int(scale), y: Int(self.visibleRect.size.height * scale) - (ypos * Int(scale)))
     }
 }

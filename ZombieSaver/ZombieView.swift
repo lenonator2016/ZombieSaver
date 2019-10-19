@@ -20,6 +20,8 @@ import ScreenSaver
 
 class ZombieSaverView: ScreenSaverView {
     
+    let maxNumBeings = 10000
+    let minNumBeings = 100
     static var numBeings = 6000
     static var speed = 1
     static var panic = 5
@@ -34,7 +36,7 @@ class ZombieSaverView: ScreenSaverView {
     var beingsPositioned = false
     var freeze = 0
     var circleZombies = false
-    let numBigRects = 150
+    let numBigRects = 100
     let numSmallRects = 30
     
     var bigRects:[NSRect] = []
@@ -42,7 +44,7 @@ class ZombieSaverView: ScreenSaverView {
     var humanLabel:NSTextField!
     var panickedLabel:NSTextField!
     var zombieLabel:NSTextField!
-    var showLabels = false
+    var showLabels = true
     var initialNumberOfZombies = 1
     var makeBuildings = true
     var bitmapImageRep:NSBitmapImageRep?
@@ -57,11 +59,16 @@ class ZombieSaverView: ScreenSaverView {
         if isPreview {
             ZombieSaverView.numBeings = 1000
         }
+        else {
+            let scale = NSScreen.main!.backingScaleFactor
+            ZombieSaverView.numBeings = Int((frame.size.width * scale) / 1000.0) * 1000
+        }
         
         ZombieSaverView.view = self
         bitmapImageRep = bitmapImageRepForCachingDisplay(in: self.visibleRect)
         
         createColors()
+        createLabels()
         createSimulation()
     }
     
@@ -102,7 +109,6 @@ class ZombieSaverView: ScreenSaverView {
     
     private func createSimulation() {
         createBuildings()
-        createLabels()
         createBeings()
         updateLabels()
     }
@@ -194,11 +200,14 @@ class ZombieSaverView: ScreenSaverView {
         let keyCode = event.keyCode
         
         switch keyCode {
-        case 45:
+        case 6:         // Z
+            createSimulation()
+            
+        case 45:        // N
             makeBuildings = !makeBuildings
             createSimulation()
             
-        case 37:        // l - show/hide labels
+        case 37:        // L - show/hide labels
             showLabels = !showLabels
             updateLabels()
             
@@ -245,7 +254,7 @@ class ZombieSaverView: ScreenSaverView {
         case 24:        // + - increase zombie count
             fallthrough
         case 69:        // +
-            if ZombieSaverView.numBeings < 6000 {
+            if ZombieSaverView.numBeings < maxNumBeings {
                 ZombieSaverView.numBeings = ZombieSaverView.numBeings + 100
                 createBeings()
                 updateLabels()
@@ -254,7 +263,7 @@ class ZombieSaverView: ScreenSaverView {
         case 27 :    // - decrease zombie count
             fallthrough
         case 78:    // -
-            if ZombieSaverView.numBeings > 100 {
+            if ZombieSaverView.numBeings > minNumBeings {
                 ZombieSaverView.numBeings = ZombieSaverView.numBeings - 100
                 createBeings()
                 updateLabels()

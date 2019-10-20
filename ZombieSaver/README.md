@@ -1,12 +1,12 @@
 #  ZombieSaver
 
-Around 15 years ago I came across a cool little zombie simulation, written as a Java applet. It still lives on the web at https://kevan.org/proce55ing/zombies/ although most browsers won't run it anymore.
+Around 15 years ago I came across a cool little zombie simulation, written as a Java applet. It still lives on the web at https://kevan.org/proce55ing/zombies/ although most browsers won't run it anymore. Basically, you start out with a bunch of humans and one zombie and slowly the human population turns into zombies (or do they?).
 
 I thought it would be cool to turn it into an OS X screen saver - Apple had recently released a template project in XCode for creating screen savers, so I ported it to Objective-C and added a few modifications of my own. It worked great, except it was a bit slow on larger sceens (technical details below for those who care).
 
 Over the years, I had it on my systems at home until one day it stopped working. I tried fixing it to work with modern versions of OS X but never got around to finishing it. Then swift came out and I figured I'd port it again for fun.
 
-ZombieSaver should run on Cataline and Mojave, and maybe earlier versions of OS X. It will work on both retina and non-retina displays but not both at the same time.
+ZombieSaver should run on Catalina and Mojave, and maybe earlier versions of OS X. It will work on both retina and non-retina displays but not both at the same time.
 
 Anyway, the original simulation instructions follow, along with my modifications (in bold)
 
@@ -37,7 +37,7 @@ Press f to pause/unpause the simulation
 
 Notes:
 
-The simulation will create an initial number of humans based on the size of your display, roughly 2000 beings for every 1000 points of horizontal resolution. More beings will make the simulation run slower, while less beings will speed things up. (Technical note: beings "look" around by examining the color of the pixels in front of them for a short distance. The code uses the getPixel function of NSBitMapImageRep, which I suspect under the covers just uses pointer arithmetic to find the appropriate pixel. I tried direct pointer access myself hoping it would be faster, but it didn't seem any faster. In the Objective-C days, using NSReadPixel was **definitely** slower than reading the bitmap directly.)
+The simulation will create an initial number of humans based on the size of your display, roughly 2000 beings for every 1000 points of horizontal resolution. More beings will make the simulation run slower, while less beings will speed things up. Macs released in the last 2-3 years will certainly perform much better than older Macs (Technical note: beings "look" around by examining the color of the pixels in front of them for a short distance. The code uses the getPixel function of NSBitMapImageRep, which I suspect under the covers just uses pointer arithmetic to find and read the appropriate pixel. I tried direct pointer access myself hoping it would be faster, but it didn't seem any faster. In the Objective-C days, using NSReadPixel was **definitely** slower than reading the bitmap directly. The applet runs screaming fast, but it's just drawing into a tiny view, whereas we all have retina displays with millions of pixels).
 
 Known Issues:
 

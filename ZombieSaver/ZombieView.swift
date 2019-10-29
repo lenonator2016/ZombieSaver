@@ -44,6 +44,7 @@ class ZombieSaverView: ScreenSaverView {
     var humanLabel:NSTextField!
     var panickedLabel:NSTextField!
     var zombieLabel:NSTextField!
+    var infoView:NSTextField!
     var showLabels = true
     var initialNumberOfZombies = 1
     var makeBuildings = true
@@ -61,7 +62,15 @@ class ZombieSaverView: ScreenSaverView {
         }
         else {
             let scale = NSScreen.main!.backingScaleFactor
-            ZombieSaverView.numBeings = Int((frame.size.width * scale) / 1000.0) * 1000
+            var beingsCount = Int((frame.size.width * scale) / 1000.0) * 1000
+            
+            if let defaults = ScreenSaverDefaults.init(forModuleWithName: "com.lencosoftware.zombieSaver") {
+                if defaults.integer(forKey: "BeingsCount") > 0 {
+                    beingsCount = defaults.integer(forKey: "BeingsCount")
+                }
+            }
+            
+            ZombieSaverView.numBeings = beingsCount
         }
         
         ZombieSaverView.view = self
@@ -69,6 +78,7 @@ class ZombieSaverView: ScreenSaverView {
         
         createColors()
         createLabels()
+        createInfoView()
         createSimulation()
     }
     
@@ -183,6 +193,25 @@ class ZombieSaverView: ScreenSaverView {
         self.addSubview(zombieLabel)
     }
     
+    private func createInfoView() {
+        let frame = NSInsetRect(self.frame, 200, 200)
+        infoView = NSTextField.init(string: "Zombies are red, move very slowly and change direction randomly and frequently unless they can see something moving in front of them, in which case they start walking towards it. After a while they get bored and wander randomly again.\n\nIf a zombie finds a human standing directly in front of it, it bites and infects them; the human immediately joins the ranks of the undead.\n\nHumans are green and run five times as fast as zombies, occasionally changing direction at random. If they see a zombie directly in front of them, they turn around and panic.\n\nPanicked humans are yellow and run twice as fast as other humans. If a humans sees another panicked human, it starts panicking as well. A panicked humans who has seen nothing to panic about for a while will calm down again.\n\nThe simulation starts with a bunch of humans and one zombie.\n\nControls\nPress n to toggle between buildings and no buildings.\nPress s to alter the simulation speed.\nPress space to uninfect all but the starting number of zombies.\nPress z to reset to a new city.\nPress + and - to adjust population by 100 (minimum of 100, maximum of 10,000).\nPress p to toggle complete panic (as in v1).)\nPress l to toggle labels visibility\nPress 1 through 5 to set the starting number of zombies and reset the simulation\nPress f to pause/unpause the simulation\nPress c to temporarily draw a circle around each zombie\nPress i to toggle this info screen on/off.")
+        infoView.isEditable = false
+        infoView.frame = frame
+        infoView.isHidden = true
+        infoView.backgroundColor = .clear
+        infoView.isEditable = false
+        infoView.isSelectable = false
+        infoView.isBezeled = false
+        infoView.isBordered = false
+        infoView.drawsBackground = true
+        infoView.textColor = .white
+        infoView.lineBreakMode = .byWordWrapping
+        
+        
+        self.addSubview(infoView)
+    }
+    
     private func createBeings() {
         ZombieSaverView.beings.removeAll()
         beingsPositioned = false
@@ -239,6 +268,9 @@ class ZombieSaverView: ScreenSaverView {
                 ZombieSaverView.speed = ZombieSaverView.speed + 1
                 if ZombieSaverView.speed > 4 { ZombieSaverView.speed = 1 }
             
+        case 34:        // I - show instructions
+            infoView.isHidden = !infoView.isHidden
+            
         case 35:        // p
             ZombieSaverView.panic = 5 - ZombieSaverView.panic
             
@@ -258,6 +290,10 @@ class ZombieSaverView: ScreenSaverView {
                 ZombieSaverView.numBeings = ZombieSaverView.numBeings + 100
                 createBeings()
                 updateLabels()
+                
+                if let defaults = ScreenSaverDefaults.init(forModuleWithName: "com.lencosoftware.zombieSaver") {
+                   defaults.set(ZombieSaverView.numBeings, forKey: "BeingsCount")
+               }
             }
             
         case 27 :    // - decrease zombie count
@@ -267,6 +303,10 @@ class ZombieSaverView: ScreenSaverView {
                 ZombieSaverView.numBeings = ZombieSaverView.numBeings - 100
                 createBeings()
                 updateLabels()
+                
+                if let defaults = ScreenSaverDefaults.init(forModuleWithName: "com.lencosoftware.zombieSaver") {
+                   defaults.set(ZombieSaverView.numBeings, forKey: "BeingsCount")
+               }
             }
             
         case 8:     // c - draw circle around zombies

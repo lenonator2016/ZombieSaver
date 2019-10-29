@@ -1,0 +1,9 @@
+/* 
+  Strings.strings
+  ZombieSaver
+
+  Created by James Leno on 10/26/19.
+  Copyright © 2019 Lenco Software, LLC. All rights reserved.
+*/
+
+"Info" = "Zombies are red, move very slowly and change direction randomly and frequently unless they can see something moving in front of them, in which case they start walking towards it. After a while they get bored and wander randomly again.\n\nIf a zombie finds a human standing directly in front of it, it bites and infects them; the human immediately joins the ranks of the undead.\n\nHumans are green and run five times as fast as zombies, occasionally changing direction at random. If they see a zombie directly in front of them, they turn around and panic.\n\nPanicked humans are yellow and run twice as fast as other humans. If a humans sees another panicked human, it starts panicking as well. A panicked humans who has seen nothing to panic about for a while will calm down again.\n\nThe simulation starts with a bunch of humans and one zombie.\n\nControls\nPress n to toggle between buildings and no buildings.\nPress s to alter the simulation speed.\nPress space to uninfect all but the starting number of zombies.\nPress z to reset to a new city.\nPress + and - to adjust population by 100 (minimum of 100, maximum of 10,000).\nPress p to toggle complete panic (as in v1).)\nPress l to toggle labels visibility\nPress 1 through 5 to set the starting number of zombies and reset the simulation\nPress f to pause/unpause the simulation\nPress c to temporarily draw a circle around each zombie\nPress i to toggle this info screen on/off.";
